@@ -1,0 +1,272 @@
+"Phrases"
+{
+
+	"smg"
+	{
+		"th"		"IMI Uzi SMG"
+	}
+	"smg_silenced"
+	{
+		"th"		"MAC-10 ปืนกลเบาเก็บเสียง"
+	}
+	"smg_mp5"
+	{
+		"th"		"H&K MP5"
+	}
+
+
+	"rifle"
+	{
+		"th"		"M16A2"
+	}
+	"rifle_desert"
+	{
+		"th"		"FN SCAR-L"
+	}
+	"rifle_ak47"
+	{
+		"th"		"AK-47"
+	}
+	"rifle_sg552"
+	{
+		"th"		"SG552"
+	}
+	"rifle_m60"
+	{
+		"th"		"M60"
+	}
+
+	"hunting_rifle"
+	{
+		"th"		"Hunting Rifle"
+	}
+	"sniper_military"
+	{
+		"th"		"Sniper Rifle"
+	}
+	"sniper_awp"
+	{
+		"th"		"AWP"
+	}
+	"sniper_scout"
+	{
+		"th"		"Scout"
+	}
+	
+
+	"pumpshotgun"
+	{
+		"th"		"Pump Shotgun"
+	}
+	"shotgun_chrome"
+	{
+		"th"		"Chrome Shotgun"
+	}
+	"autoshotgun"
+	{
+		"th"		"Auto Shotgun"
+	}
+	"shotgun_spas"
+	{
+		"th"		"Spas Shotgun"
+	}
+
+
+	"pistol"
+	{
+		"th"		"ปืนพก"
+	}
+	"pistol_magnum"
+	{
+		"th"		"แม็กนั่ม"
+	}
+	"grenade_launcher"
+	{
+		"th"		"M79 เครื่องยิงลูกระเบิด"
+	}
+
+
+	"katana"
+	{
+		"th"		"คาตานะ"
+	}
+	"fireaxe"
+	{
+		"th"		"ขวาน"
+	}
+	"chainsaw"
+	{
+		"th"		"เลื่อยยนต์"
+	}
+	"baseball_bat"
+	{
+		"th"		"ไม้เบสบอล"
+	}
+	"electric_guitar"
+	{
+		"th"		"กีตาร์"
+	}
+	"tonfa"
+	{
+		"th"		"กระบองตำรวจ"
+	}
+	"machete"
+	{
+		"th"		"มีดมาเชเต้"
+	}
+	"cricket_bat"
+	{
+		"th"		"ไม้คริกเก็ท"
+	}
+	"frying_pan"
+	{
+		"th"		"กระทะ"
+	}
+	"crowbar"
+	{
+		"th"		"ชะแลง"
+	}
+	"knife"
+	{
+		"th"		"มีด CS"
+	}
+	"flamethrower"
+	{
+		"th"		"เครื่องพ่นไฟ"
+	}
+	"pitchfork"
+	{
+		"th"		"คราด"
+	}
+	"shovel"
+	{
+		"th"		"พลั่ว"
+	}
+	"golfclub"
+	{
+		"th"		"ไม้กอล์ฟ"
+	}
+
+
+	"pipe_bomb"
+	{
+		"th"		"ไปป์บอมบ์"
+	}
+	"molotov"
+	{
+		"th"		"ระเบิดขวด"
+	}
+	"vomitjar"
+	{
+		"th"		"ขวดอ๊วก"
+	}
+	"gascan"
+	{
+		"th"		"ถังบรรจุแก๊ส"
+	}
+	"propanetank"
+	{
+		"th"		"ถังโพรเพน"
+	}
+	"fireworkcrate"
+	{
+		"th"		"ลังดอกไม้ไฟ"
+	}
+	"oxygentank"
+	{
+		"th"		"ถังอ็อกซิเจน"
+	}
+
+	"laser_sight"
+	{
+		"th"		"เลเซอร์"
+	}
+	"explosive_ammo"
+	{
+		"th"		"กระสุนระเบิด"
+	}
+	"upgradepack_explosive"
+	{
+		"th"		"กล่องกระสุนระเบิด"
+	}
+	"incendiary_ammo"
+	{
+		"th"		"กระสุนไฟ"
+	}
+	"upgradepack_incendiary"
+	{
+		"th"		"กล่องกระสุนไฟ"
+	}
+
+
+	"first_aid_kit"
+	{
+		"th"		"ชุดปฐมพยาบาล"
+	}
+	"adrenaline"
+	{
+		"th"		"เข็มอะดรีนาลีน"
+	}
+	"pain_pills"
+	{
+		"th"		"ยาแก้ปวด"
+	}
+	"defibrillator"
+	{
+		"th"		"เครื่องกระตุ้นหัวใจ"
+	}
+
+	"cola_bottles"
+    {
+        "th"        "โคล่า"
+    }
+    "gnome"
+    {
+        "th"        "ภูตโนม"
+    }
+
+	"airstrike"
+	{
+		"th"		"เครื่องบินทิ้งระเบิด"
+	}
+	
+	"airstrike_on_crosshair"
+	{
+		"th"		"เครื่องบินทิ้งระเบิด ใส่เป้าหมาย"
+	}
+
+	"airstrike_on_position"
+	{
+		"th"		"เครื่องบินทิ้งระเบิด ใส่ตัวเอง"
+	}
+	
+	"extinguisher"
+	{
+		"th"		"ถังดับเพลิง/เครื่องพ่นไฟ"
+	}
+
+	"lethal_ammo"
+	{
+		"th"		"Lethal Ammo"
+	}
+
+	"lethal_ammo_3"
+	{
+		"th"		"Lethal Ammo (3 bullets)"
+	}
+
+	"LA_CHARGING"
+	{
+		"th"		"Filling Lethal Ammo"
+	}
+
+	"LA_CHARGED"
+	{
+		"th"		"Lethal Ammo is Filled"
+	}
+
+	"LA_REMAINING"
+	{
+		"th"		"Remaining Ammo"
+	}
+}

@@ -1,0 +1,103 @@
+﻿"Phrases"
+{
+	"Change map advertise"
+	{
+		"#format"		"{1:s}"
+		"th"			"พิมพ์ {1} ในแชทเพื่อเริ่มต้นการโหวตสำหรับแคมเปญถัดไป."
+	}
+	"Map vote advertise"
+	{
+		"#format"		"{1:s},{2:s}"
+		"th"			"หากต้องการโหวตแผนที่ถัดไป พิมพ์: {1}\n           หากต้องการดูผลโหวตทั้งหมด พิมพ์: {2}"
+	}	
+	
+	"Choose a Map"
+	{
+		"th"			"เลือกแผนที่ถัดไป"
+	}
+	"Choose a Mission"
+	{
+		"th"			"เลือกแคมเปญถัดไป"
+	}
+	"I dont care" {
+		"th"			"ฉันไม่สนใจ"
+	}
+	"All maps" {
+		"th"			"แผนที่ทั้งหมด"
+	}
+	
+	"Campaign finished"
+	{
+		"#format"		"{1:s}"
+		"th"			"แคมเปญ {1} เสร็จสิ้น"
+	}
+	"Switching campaign to"
+	{
+		"#format"		"{1:s}"
+		"th"			"กำลังเปลี่ยนแคมเปญเป็น {1}."
+	}
+	"Switching map to"
+	{
+		"#format"		"{1:s}"
+		"th"			"กำลังเปลี่ยนแผนที่เป็น {1}."
+	}	
+	"Switching to the vote winner"
+	{
+		"#format"		"{1:s}"
+		"th"			"เปลี่ยนเป็นผู้ชนะการโหวต: {1}."
+	}
+	
+	"Map is now winning the vote"
+	{
+		"#format"		"{1:s}"
+		"th"			"แผนที่ {1} กำลังชนะการโหวต"
+	}
+	"Mission is now winning the vote"
+	{
+		"#format"		"{1:s}"
+		"th"			"แคมเปญ {1} กำลังชนะการโหวต"
+	}
+	"No one has voted yet" {
+		"th"			"ยังไม่มีใครโหวต."
+	}
+	"Voting is disable" {
+		"th"			"การโหวตถูกปิดใช้งานบนเซิร์ฟเวอร์นี้."
+	}
+	"Voting is not available" {
+		"th"			"การโหวตจะเปิดใช้งานเฉพาะในแผนที่ ค้นหาน้ำมัน หรือแผนที่สุดท้ายเท่านั้น."
+	}
+	"Votes" {
+		"th"			"โหวต"
+	}
+	"You did not vote" {
+		"#format"		"{1:s}"
+		"th"			"คุณไม่ได้โหวต.\nหากต้องการโหวต, พิมพ์: {1}"
+	}
+	"You voted for" {
+		"#format"		"{1:s},{2:s},{3:s}"
+		"th"			"คุณโหวตให้ {1}.\n- หากต้องการเปลี่ยนการโหวต, พิมพ์: {2}\n- หากต้องการดูผลโหวตทั้งหมด, พิมพ์: {3}"	
+	}
+	
+	
+	"The next map is currently"
+	{
+		"#format"		"{1:s}"
+		"th"			"แผนที่ถัดไปคือ: {1}."
+	}
+	"The next campaign is currently"
+	{
+		"#format"		"{1:s}"
+		"th"			"แคมเปญต่อไปคือ: {1}."
+	}
+
+	"The next map will be one of"
+	{
+		"#format"		"{1:s}"
+		"th"			"แผนที่ต่อไปจะเป็นหนึ่งใน: {1}."
+	}
+	"The next campaign will be one of"
+	{
+		"#format"		"{1:s}"
+		"th"			"แคมเปญต่อไปจะเป็นหนึ่งใน: {1}."
+	}
+}

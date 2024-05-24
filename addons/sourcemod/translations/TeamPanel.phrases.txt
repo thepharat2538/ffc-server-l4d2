@@ -1,0 +1,63 @@
+﻿"Phrases"
+{
+	"Survivors"
+	{
+		"ru"		"Крепыши"
+		"en"		"Survivors"
+		"th"		"ผู้รอดชีวิต"
+	}
+	"Bot(s)"
+	{
+		"ru"		"ботов"
+		"en"		"Bots"
+		"th"		"บอท"
+	}
+	"INCAP"
+	{
+		"ru"		"УПАЛ"
+		"en"		"INCAP"
+		"th"		"ล้ม"
+	}
+	"B/R"
+	{
+		"ru"		"Ч/К"
+		"en"		"B/R"
+		"th"		"สาหัส"
+	}
+	"B/W"
+	{
+		"ru"		"Ч/Б"
+		"en"		"B/W"
+		"th"		"ใกล้ตาย"
+	}
+	"DEAD"
+	{
+		"ru"		"СДОХ"
+		"en"		"DEAD"
+		"th"		"ตาย"
+	}
+	"Infected"
+	{
+		"ru"		"Зомбари"
+		"en"		"Infected"
+		"th"		"ผู้ติดเชื้อ"
+	}
+	"DOWN"
+	{
+		"ru"		"УПАЛ"
+		"en"		"DOWN"
+		"th"		"ล้มลง"
+	}
+	"GHOST"
+	{
+		"ru"		"ПРИЗРАК"
+		"en"		"GHOST"
+		"th"		"วิญญาณ"
+	}
+	"Spectators"
+	{
+		"ru"		"Зрители"
+		"en"		"Spectators"
+		"th"		"ผู้ชม"
+	}
+}

@@ -1,0 +1,109 @@
+﻿// Types
+// -----
+// center: Center message
+// chat: Chat message
+// hint: Hint message
+// menu: Menu message
+//
+// -----
+//	Following named colors are supported in L4D1/L4D2:
+//	 - {default}	(white color)
+//	 - {green}		(olive color)
+//	 - {olive}		(green color)
+//	 - {lightgreen}	(light green color)
+//	 - {red}		(red color)
+//	 - {blue}		(blue color)
+//	 Warning: {lightgreen}、{red}、{blue}, 2 of 3 colors can not be used at the same sentence
+
+// 中文說明
+// -----
+// center: 廣告文字顯示於螢幕中央
+// chat: 廣告文字顯示於聊天框
+// hint: 廣告文字顯示於螢幕下方黑底白字框
+// menu: 廣告文字顯示於Menu菜單
+//
+// -----
+//	以下顏色只支援於 L4D1/L4D2:
+//	 - {default}	(白色)
+//	 - {green}		(橘色)
+//	 - {olive}		(綠色)
+//	 - {lightgreen}	(淺綠色)
+//	 - {red}		(紅色)
+//	 - {blue}		(藍色)
+//	 注意事項: 藍色、紅色、淺綠色，這三種顏色不可出現在同一句話裡
+//
+
+"Advertisements"
+{
+    "1"
+    {
+        "chat"			"{olive}[WELCOME] {lightgreen}ยินดีต้อนรับสู่เซิร์ฟเวอร์ Funny Fat Cat"
+    }
+	"2"
+    {
+        "chat"			"{olive}[TIP] !js{lightgreen}: เข้าร่วมเกม, {olive}!afk{lightgreen}: เพื่อนิ่งเฉย, {olive}!ob{lightgreen}: เข้าโหมดผู้ชม"       
+    }
+	"3"
+    {
+		"chat"			"{olive}[TIP] !mapvote{lightgreen}: โหวตแคมเปญถัดไป, {olive}!votemode{lightgreen}: โหวตโหมดเกม"
+    }
+	"4"
+    {
+		"chat"			"{olive}[TIP] {lightgreen}สามารถเปลี่ยนตัวละครได้ด้วยการพิมพ์ {olive}!csm"
+    }
+	"5"
+    {
+		"chat"			"{olive}[TIP] {lightgreen}สามารถเต้นได้ด้วยการพิมพ์ {olive}!dance {lightgreen}หรือ {olive}!emotes"
+    }
+	"6"
+    {
+        "chat"			"{olive}[NOTE] {lightgreen}เข้าร่วมกลุ่ม Discord {olive}https://discord.gg/2zwfwvWqf4"
+    }
+	"7"
+    {
+		"chat"			"{olive}[NOTE] {lightgreen}หากคุณชอบเซิร์ฟเวอร์นี้ พิมพ์{olive} !motd{lightgreen} เพื่อเข้าร่วมกลุ่ม Steam"
+    }
+	"8"
+    {
+        "chat"			"{olive}[NOTE] {lightgreen}ดาวน์โหลดแคมเปญเสริมได้ที่ {olive}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
+    }
+	"9"
+    {
+        "chat"			"{olive}[TIME] {lightgreen}เวลาเซิร์ฟเวอร์ = วันที่: {date}, เวลา: {time}"
+    }
+    "10"
+    {
+        "chat"			"{olive}[WELCOME] {lightgreen}Welcome to Server Funny Fat Cat"
+    }
+	"11"
+    { 
+		"chat"			"{olive}[TIP] !js{lightgreen}: Join the game, {olive}!afk{lightgreen}: Become to idle, {olive}!ob{lightgreen}: Join Spectator"
+    }
+	"12"
+    {
+        "chat"			"{olive}[TIP] !mapvote{lightgreen}: Vote for the next campaign, {olive}!votemode{lightgreen}: Vote gamemode"
+    }
+	"13"
+    {
+        "chat"			"{olive}[TIP] {lightgreen}You can change characters by typing{olive} !csm"
+    }
+	"14"
+    {
+        "chat"			"{olive}[TIP] {lightgreen}You can dance by typing. {olive}!dance {lightgreen}or {olive}!emotes"
+    }
+	"15"
+    {
+        "chat"			"{olive}[NOTE] {lightgreen}Join Discord Group {olive}https://discord.gg/2zwfwvWqf4"
+    }
+	"16"
+    {
+		"chat"			"{olive}[NOTE] {lightgreen}If you like this server Type {olive}!motd{lightgreen} to Join Steam Group"
+    }
+	"17"
+    {
+		"chat"			"{olive}[NOTE] {lightgreen}Download Custom Campaigns {olive}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
+    }
+	"18"
+    {
+        "chat"			"{olive}[TIME] {lightgreen}Server Time = Date: {date}, Time: {time}"
+    }

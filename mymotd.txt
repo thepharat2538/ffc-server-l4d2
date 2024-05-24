@@ -1,0 +1,31 @@
+Welcome to Funny Fatcat Server
+This server is located in Thailand.
+
+We recommend to play together and help each other for best experience.
+
+----- Rules ------
+Breaking the rules will be punished. It depends on the consideration of the admin.
+
+Don't be toxic
+Don't use R-18 Spray
+Don't use cheat
+Don't spam mic & messege
+Don't vote kick or restart campaign without reason
+
+----- Player Commands ------
+!join			!js		// Join Survivor
+!afk			!idle		// Become to idle
+!observe		!ob		// Join Spectator
+!mapvote				// Vote Nextmap
+!dance				// Let's Dance
+!teams				// View Players list
+!mvp				// Show players stats
+!motd				// View Commands list and Join Steam Group
+
+----- Character Commands ------
+!bill			!b		!nick			!n
+!zoey		!z		!rochelle		!r
+!louis		!l		!coach		!c
+!francis		!f		!ellis			!e
+
+Enjoy !

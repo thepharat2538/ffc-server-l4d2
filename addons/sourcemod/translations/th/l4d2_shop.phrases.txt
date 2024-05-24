@@ -1,0 +1,646 @@
+"Phrases"
+{
+
+	"SYSTEM"
+	{
+		"th"		"{ORANGE}[{GREEN}SHOP{ORANGE}]{DEFAULT} "
+	}
+
+	"ADVERTISEMENT"
+	{
+		"th"		"{DEFAULT}พิมพ์ {CYAN}!buy{DEFAULT} เพื่อเปิด{CYAN}ร้านค้า"
+	}
+
+
+	"NOT_ENOUGH_POINTS"
+	{
+		"#format"  "{1:d},{2:d}"
+		"th"		"คุณมีแต้มไม่เพียงพอ. (ราคา: {ORANGE}{1}{DEFAULT}, คุณมี: {ORANGE}{2}{DEFAULT})"
+	}
+
+	"FAILED_TO_BUY"
+	{
+		"#format"  "{1:s}"
+		"th"		"ล้มเหลวการซื้อ {ORANGE}{1}{DEFAULT}!"
+	}
+
+	"REWARD_POINTS"
+	{
+		"#format"  "{1:d}"
+		"th"		"{DEFAULT}รางวัล: {GREEN}{1}{DEFAULT} แต้ม. "
+	}
+
+	"KILLED_INFECTED"
+	{
+		"#format"  "{1:d}"
+		"th"		"ฆ่าซอมบี้ {ORANGE}{1}{DEFAULT} ตัว! "
+	}
+
+	"KILLED_SPECIAL_INFECTED"
+	{
+		"th"		"ฆ่า {ORANGE}ซอมบี้พิเศษ{DEFAULT}! "
+	}
+
+	"REVIVED_TEAMMATE"
+	{
+		"th"		"ดึงเพื่อนลุกขึ้น. "
+	}
+
+	"REVIVED_TEAMMATE_LEDGE"
+	{
+		"th"		"ดึงเพื่อนขึ้น. "
+	}
+
+	"PROTECTED_TEAMMATE"
+	{
+		"th"		"ป้องกันเพื่อนร่วมทีม. "
+	}
+
+	"HEALED_TEAMMATE"
+	{
+		"th"		"รักษาเพื่อนร่วมทีม. "
+	}
+
+	"BURNED_TANK"
+	{
+		"th"		"เผา {ORANGE}Tank{DEFAULT}! "
+	}
+
+	"KILLED_WITCH"
+	{
+		"th"		"ฆ่า {ORANGE}Witch{DEFAULT}! "
+	}
+
+	"KILLED_WITCH_ONE_SHOT"
+	{
+		"th"		"ฆ่า {ORANGE}Witch{DEFAULT} ในหนึ่งนัด! "
+	}
+
+	"KILLED_TANK"
+	{
+		"th"		"ผู้รอดชีวิต เอาชนะ {ORANGE}Tank{DEFAULT}! "
+	}
+
+	"MENU_POINTS"
+	{
+		"#format"  "{1:d}"
+		"th"		"แต้มคงเหลือ: {1}"
+	}
+
+	"SHOP_INFECTED"
+	{
+		"th"		"ร้านค้า ผู้ติดเชื้อ"
+	}
+
+	"SHOP_SMGS"
+	{
+		"th"		"ร้านค้า ปืนกลเบา"
+	}
+
+	"SHOP_RIFLES"
+	{
+		"th"		"ร้านค้า ปืนกลจู่โจม"
+	}
+
+	"SHOP_SNIPERS"
+	{
+		"th"		"ร้านค้า ปืนซุ่มยิง"
+	}
+
+	"SHOP_SHOTGUNS"
+	{
+		"th"		"ร้านค้า ปืนลูกซอง"
+	}
+
+	"SHOP_OTHERS"
+	{
+		"th"		"ร้านค้า ปืนอื่นๆ"
+	}
+
+	"SHOP_SF_TRIAL"
+	{
+		"th"		"ร้านค้าของทดลอง"
+	}
+
+	"SHOP_SF_PERMANENT"
+	{
+		"th"		"ร้านค้าของถาวร"
+	}
+
+	"AUTO_BHOP"
+	{
+		"th"		"กระโดดอัตโนมัติ (Bhop)"
+	}
+
+	"GRAY_AMMO"
+	{
+		"th"		"กระสุนสีเทา"
+	}
+
+	"GREEN_AMMO"
+	{
+		"th"		"กระสุนสีเขียว"
+	}
+
+	"BLUE_AMMO"
+	{
+		"th"		"กระสุนสีฟ้า"
+	}
+
+	"GOLD_AMMO"
+	{
+		"th"		"กระสุนสีทอง"
+	}
+
+	"RED_AMMO"
+	{
+		"th"		"กระสุนสีแดง"
+	}
+
+	"PERMANENT"
+	{
+		"th"		"(ถาวร)"
+	}
+
+	"ONE_ROUND"
+	{
+		"th"		"(รอบเดียว)"
+	}
+
+	"REFUNDED"
+	{
+		"#format"  "{1:d}"
+		"th"		"คืน {GREEN}{1}{DEFAULT} แต้ม."
+	}
+
+	"IS_IN_YOUR_BAG"
+	{
+		"#format"  "{1:s}"
+		"th"		"You already have {ORANGE}{1}{DEFAULT}."
+	}
+
+	"MENU_BUY_CONFIRM"
+	{
+		"#format"  "{1:s},{2:d},{3:d},{4:d}"
+		"th"		"สินค้า: {1}\nราคา: {2}\n(แต้มของคุณ: {3})\n"
+	}
+
+	"SUCCEED_TO_BUY"
+	{
+		"#format"  "{1:s},{2:d},{3:d}"
+		"th"		"ซื้อ {ORANGE}{1}{GREEN} สำเร็จแล้ว! ราคา {ORANGE}{2}{DEFAULT} แต้ม, ยอดคงเหลือ: {GREEN}}{3}{DEFAULT}."
+	}
+
+	"SUCCEED_TO_LOAD"
+	{
+		"#format"  "{1:s},{2:d}"
+		"th"		"ID:{ORANGE}{1}%{DEFAULT}, แต้ม: {GREEN}{2}{DEFAULT}."
+	}
+
+	"ENABLED"
+	{
+		"th"	   "เปิดใช้งาน"
+	}
+
+	"DISABLED"
+	{
+		"th"	   "ปิดใช้งาน"
+	}
+
+	"ADMIN_ADD_POINT"
+	{
+		"#format"  "{1:d}"
+		"th" 		"{ORANGE}แอดมิน{DEFAULT} ได้เพิ่มแต้มให้คุณ: {GREEN}{1}{DEFAULT}แต้ม."
+	}
+
+	"ADMIN_CONFISCATE_POINT"
+	{
+		"#format"  "{1:d}"
+		"th" 		"{ORANGE}แอดมิน{DEFAULT} ได้ยึดแต้มของคุณ: {ORANGE}{1}{DEFAULT}แต้ม"
+	}
+	"ADMIN_SET_POINT"
+	{
+		"#format"  "{1:d}"
+		"th" 		"{ORANGE}แอดมิน{DEFAULT} ได้กำหนดแต้มให้คุณ: {ORANGE}{1}{DEFAULT}แต้ม"
+	}
+
+	"MENU_TITLE_ADD_LIST"
+	{
+		"#format"  "{1:d}"
+		"th" 		"Reward: {1} Points"
+	}
+
+	"MENU_TITLE_CONFISCATE_LIST"
+	{
+		"#format"  "{1:d}"
+		"th" 		"Confiscate: {1} Points"
+	}
+
+	"MENU_TITLE_SET_LIST"
+	{
+		"#format"  "{1:d}"
+		"th" 		"Set: {1} Points"
+	}
+
+	"MENU_TITLE_POINTS_LIST"
+	{
+		"th" 		"เลือกแต้ม: "
+	}
+
+	"MENU_ADD_POINTS"
+	{
+		"th" 		"เพิ่มแต้ม"
+	}
+
+	"MENU_REDUCE_POINTS"
+	{
+		"th" 		"ลดแต้ม"
+	}
+
+	"MENU_SET_POINTS"
+	{
+		"th" 		"กำหนดแต้ม"
+	}
+
+	"MENU_ADMIN_OPTION"
+	{
+		"th" 		"คำสั่งร้านค้า"
+	}
+
+	"INVOICE"
+	{
+		"th"		"{ORANGE}ใบแจ้งหนี้{DEFAULT}"
+	}
+
+	"INVOICE_BUY_ITEM"
+	{
+		"th"		"สินค้า: "
+	}
+
+	"INVOICE_PRICE"
+	{
+		"#format"  "{1:d}"
+		"th"		"ราคา:{ORANGE}{1}{DEFAULT}"
+	}
+	"INVOICE_BUYER_INFO"
+	{
+		"#format"  "{1:N},{2:d}"
+		"th"		"ลูกค้า:{BLUE}{1}{DEFAULT}, ยอดคงเหลือ:{GREEN}{2}{DEFAULT}"
+	}
+	"INVOICE_THANKS"
+	{
+		"th"		"{GREEN}ขอบคุณมากค่ะ{DEFAULT}! {GREEN}ขอให้โชคดี{DEFAULT}!"
+	}
+	"INVOICE_END"
+	{
+		"th"		"================================="
+	}
+	"ammo"
+	{
+		"th"		"เติมกระสุน"
+	}
+	"health"
+	{
+		"th"		"ฟื้นพลังชีวิต"
+	}
+
+
+	"kill"
+	{
+		"th"		"ฆ่าตัวตาย"
+	}
+	"boomer"
+	{
+		"th"		"Boomer"
+	}
+	"hunter"
+	{
+		"th"		"Hunter"
+	}
+	"smoker"
+	{
+		"th"		"Smoker"
+	}
+	"spitter"
+	{
+		"th"		"Spitter"
+	}
+	"charger"
+	{
+		"th"		"Charger"
+	}
+	"jockey"
+	{
+		"th"		"Jockey"
+	}
+	"tank"
+	{
+		"th"		"Tank"
+	}
+	"witch"
+	{
+		"th"		"Witch"
+	}
+	"mob"
+	{
+		"th"		"MOB"
+	}
+	"director_force_panic_event"
+	{
+		"th"		"Panic Event"
+	}
+
+
+	"SHOP_GUNS"
+	{
+		"th"		"ร้านค้าอาวุธปืน"
+	}
+
+	"SHOP_MELEES"
+	{
+		"th"		"ร้านค้าอาวุธระยะประชิด"
+	}
+
+	"SHOP_THROWABLES"
+	{
+		"th"		"ร้านค้าอาวุธขว้าง"
+	}
+
+	"SHOP_AMMOS"
+	{
+		"th"		"ร้านค้ากระสุน"
+	}
+
+	"SHOP_MEDICINES"
+	{
+		"th"		"ร้านค้ายา"
+	}
+
+	"SHOP_SF"
+	{
+		"th"		"ร้านค้าพิเศษ"
+	}
+
+	"SHOP_SF_BAG"
+	{
+		"th"		"Special Bag"
+	}
+
+	"BUY_YES"
+	{
+		"th"		"ใช่!"
+	}
+
+	"BUY_NO"
+	{
+		"th"		"ไม่..."
+	}
+
+
+	"DEFIBRILLATE_TEAMMATE"
+	{
+		"th"		"ใช้เครื่องกระตุ้นหัวใจ. "
+	}
+
+	"RESCUED"
+	{
+		"th"		"ได้ช่วยเหลือผู้คน. "
+	}
+
+	"CURRENT_POINTS"
+	{
+		"th"		"แต้มที่มีอยู่: "
+	}
+
+	"SHOP_MAIN"
+	{
+		"th"		"ยินดีต้อนรับสู่ร้านค้า"
+	}
+
+	"ONLY_USED_BY"
+	{
+		"th"		"เฉพาะ {ORANGE}ทีมผู้รอดชีวิต {DEFAULT} หรือ {ORANGE}ทีมผู้ติดเชื้อ{DEFAULT} เท่านั้น."
+	}
+
+	"ALL_AMMO_COLORS"
+	{
+		"th"		"สีกระสุนทั้งหมด"
+	}
+
+	"MENU_SUICIDE"
+	{
+		"th"		"อยากตายเหรอ?"
+	}
+
+	"SUICIDE"
+	{
+		"th"		" ฆ่าตัวตาย."
+	}
+
+	"SUICIDE_YES"
+	{
+		"th"		"มันแน่อยู่แล้ว!"
+	}
+	"SUICIDE_NO"
+	{
+		"th"		"ขอคิดก่อน..."
+	}
+
+	"NOT_ALLOW_SUICIDE"
+	{
+		"th"		"{ORANGE}ฆ่าตัวตาย{DEFAULT} ปิดใช้งาน."
+	}
+
+	"NO_PRIMARY_WEAPON"
+	{
+		"th"		"คุณไม่มีอาวุธหลัก... "
+	}
+	"YOU_ARE_DEAD"
+	{
+		"th"		"สถานะของคุณดูเหมือนจะไม่ดี..."
+	}
+	"NO_PERMANENT_ITEM"
+	{
+		"th"		"To use {ORANGE}Special Bag{DEFAULT}, you have to buy at least one {ORANGE}permanent item{GREEN} from {ORANGE}Special Shop{DEFAULT}."
+	}
+
+	"NOTIFY_ALL"
+	{
+		"#format"	"{1:N},{2:s},{3:d}"
+		"th"		"{BLUE}{1}{DEFAULT} ซื้อ {ORANGE}{2}{DEFAULT} แล้ว! (ราคา: {ORANGE}{3}{DEFAULT})."
+	}
+
+	"SHOP_TRANSFER"
+	{
+		"th"		"โอนแต้ม"
+	}
+
+	"FAILED_TO_TRANSFER"
+	{
+		"#format"	"{1:N},{2:d},{3:d},{4:d}"
+		"th"		"ล้มเหลว! แต้มคงเหลือไม่เพียงพอที่จะโอน. (การโอน: {ORANGE}{2}{DEFAULT}+{ORANGE}{3}{DEFAULT}, ยอดคงเหลือ: {GREEN}{4}{DEFAULT})."
+	}
+
+	"TRANSFERRED_ALL"
+	{
+		"#format"	"{1:N},{2:d},{3:N},{4:d}"
+		"th"		"{BLUE}{1}{DEFAULT} ได้โอน {GREEN}{2}{DEFAULT} แต้มให้ {BLUE}{3}{DEFAULT}. (ค่าภาษี: {ORANGE}{4}{DEFAULT})"
+	}
+
+	"TRANSFERRED_TO"
+	{
+		"#format"	"{1:N},{2:d},{3:d}"
+		"th"		"{BLUE}คุณ{DEFAULT}ได้โอน {GREEN}{2}{DEFAULT} แต้มให้ {BLUE}{1}{DEFAULT}. (จ่ายภาษี: {ORANGE}{3}{DEFAULT})"
+	}
+
+	"TRANSFERRED"
+	{
+		"#format"	"{1:N},{2:d}"
+		"th"		"{BLUE}{1}{DEFAULT} ได้โอน {GREEN}{2}{DEFAULT} แต้มให้{BLUE}คุณ{DEFAULT}."
+	}
+
+	"USER_MISMATCH"
+	{
+		"th"		"ผู้ใช้ไม่ตรงกัน... ลองใหม่อีกครั้ง."
+	}
+
+	"YES"
+	{
+		"th"		"ตกลง"
+	}
+
+	"NO"
+	{
+		"th"		"ยกเลิก"
+	}
+
+	"MENU_TITLE_TRANSFER_POINT"
+	{
+		"#format"	"{1:d}"
+		"th"		"โอน {1} แต้มไปยัง:"
+	}
+
+	"HANDLING_FEE"
+	{
+		"th"		"ภาษี: "
+	}
+
+	"AFTER_TRANSFERRED_BALANCE"
+	{
+		"th"		"ยอดคงเหลือหลังจากโอน: "
+	}
+
+	"KILLED_SURVIVOR"
+	{
+		 "th"		"ฆ่า {ORANGE}ผู้รอดชีวิต{DEFAULT}! "
+	}
+
+	"INCAPACITATE_SURVIVOR"
+	{
+		 "th"		"ล้มผู้รอดชีวิต. "
+	}
+
+	"PULLED_SURVIVOR"
+	{
+		 "th"		"Pulled a survivor. "
+	}
+
+	"POUNCED_SURVIVOR"
+	{
+		 "th"		"Pounced a survivor. "
+	}
+
+	"TAGGED_SURVIVOR"
+	{
+		 "th"		"Tagged a survivor. "
+	}
+
+	"CHARGED_SURVIVOR"
+	{
+		 "th"		"Charged a survivor. "
+	}
+
+	"COLLATERAL_DAMAGE"
+	{
+		 "th"		"Collateral damage!!! "
+	}
+
+	"RODE_SURVIVOR"
+	{
+		 "th"		"Rode a survivor!!! "
+	}
+
+	"BATH_DAMAGE"
+	{
+		 "th"		"Bath Damage! "
+	}
+
+	"MULTIPLE_DAMAGE"
+	{
+		 "th"		"Multiple Damage! "
+	}
+
+	"INVALID_ITEM"
+	{
+		"#format"	"{1:s}"
+		"th"		"{ORANGE}{1}{DEFAULT} รายการไม่ถูกต้อง."
+	}
+
+	"YOU_ARE_ALIVE"
+	{
+		"th"		"คุณต้องตายก่อน, จึงจะเกิดใหม่ได้."
+	}
+
+	"HELP"
+	{
+		"th"		"แต้มสามารถรับได้จากการร่วมมือกันเป็นทีม พิมพ์ !buy เพื่อใช้จ่าย และ !points เพื่อดูว่าคุณมีกี่แต้ม."
+	}
+
+	"UP_TO_LIMIT"
+	{
+		"#format"	"{1:s}"
+		"th"		"Failed. The amount of {ORANGE}{1}{DEFAULT} reached the upper limit."
+	}
+
+	"SHOP_AIRSTRIKE"
+	{
+		"th"		"ร้านแอร์สไตรค์"
+	}
+
+	"SUPER_QING_GONG_ACTIVE"
+	{
+		"th"		"Super Qing Gong"
+	}
+
+	"QING_GONG_ACTIVE"
+	{
+		"th"		"Qing Gong"
+	}
+
+	"QING_GONG"
+	{
+		"th"		"Qing Gong Scroll"
+	}
+
+	"WHEN_SF_IS_ON"
+	{
+		"#format"   "{1:s},{2:s}"
+		"th"		"เมื่อ {ORANGE}{1}{DEFAULT} {GREEN}เปิด{DEFAULT}, {ORANGE}{2}{DEFAULT} จะถูก {ORANGE}ปิด{DEFAULT} อัตโนมัติ."
+	}
+
+	"AUTO_BHOP_TUT"
+	{
+		"th"		"กด {ORANGE}JUMP{DEFAULT} เพื่อใช้งาน {ORANGE}ออโต้บันนี่ฮอป{DEFAULT}."
+	}
+
+	"QING_GONG_TUT"
+	{
+		"th"		"กด {ORANGE}DUCK /+ DOUBLE JUMP{DEFAULT} เพื่อใช้งาน {ORANGE}Qing Gong{DEFAULT}."
+	}
+
+	"NO_GUN_TO_ACTIVE"
+	{
+		"#format"   "{1:s}"
+		"th"		"คุณไม่มีปืนเลย, {ORANGE}{1}{DEFAULT} จะเปิดใช้งานหลังจากที่คุณหยิบปืน."
+	}
+}

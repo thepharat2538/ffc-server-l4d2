@@ -1,0 +1,59 @@
+﻿"Phrases"
+{
+	"Gave"
+	{
+		"#format"		"{1:s},{2:s},{3:s}"
+		"th"			"{1} มอบ {2} ให้ {3}"
+	}
+	"Grabbed"
+	{
+		"#format"		"{1:s},{2:s},{3:s}"
+		"th"			"{1} หยิบ {2} จาก {3}"
+	}
+	"BotGrabbed"
+	{
+		"#format"		"{1:s},{2:s}"
+		"th"			"{1} เก็บ {2}"
+	}
+	"Switched"
+	{
+		"#format"		"{1:s},{2:s},{3:s}"
+		"th"			"{1} สลับ {2} กับ {3}"
+	}
+	"weapon_molotov"
+	{
+		"th"			"ระเบิดขวด"
+	}
+	"weapon_pipe_bomb"
+	{
+		"th"			"ไปป์บอมบ์"
+	}
+	"weapon_vomitjar"
+	{
+		"th"			"ขวดอ๊วก"
+	}
+	"weapon_first_aid_kit"
+	{
+		"th"			"ชุดปฐมพยาบาล"
+	}
+	"weapon_pain_pills"
+	{
+		"th"			"ยาแก้ปวด"
+	}
+	"weapon_adrenaline"
+	{
+		"th"			"เข็มอะดรีนาลีน"
+	}
+	"weapon_upgradepack_explosive"
+	{
+		"th"			"กระสุนระเบิด"
+	}
+	"weapon_upgradepack_incendiary"
+	{
+		"th"			"กระสุนเพลิง"
+	}
+	"weapon_defibrillator"
+	{
+		"th"			"เครื่องกระตุ้นหัวใจ"
+	}
+}

@@ -1,0 +1,22 @@
+"Phrases"
+{
+	"Door_Open"
+	{
+		"th"		"{olive}[ห้องนิรภัย] {white}เปิดประตู โดย {orange}%N"
+	}
+
+	"Door_Close"
+	{
+		"th"		"{olive}[ห้องนิรภัย] {white}ปิดประตู โดย {orange}%N"
+	}
+
+	"Door_Wait"
+	{
+		"th"		"{olive}[ห้องนิรภัย] {white}ประตูจะปลดล็อคใน {orange}%d {white}วินาที"
+	}
+
+	"Door_Unlocked"
+	{
+		"th"		"{olive}[ห้องนิรภัย] {white}ประตู {orange}เปิดแล้ว"
+	}
+}

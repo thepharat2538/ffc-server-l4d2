@@ -1,0 +1,30 @@
+"CountryShow"
+{
+	// {PLAYERNAME}: player name
+	// {STEAMID}: player STEAMID
+	// {PLAYERCOUNTRY}: player country name
+	// {PLAYERCOUNTRYSHORT}: player country short name
+	// {PLAYERCOUNTRYSHORT3}: player country another short name
+	// {PLAYERCITY}: player city name
+	// {PLAYERREGION}: player region name
+	// {PLAYERIP}: player IP
+	// {PLAYERTYPE}: player is Adm or not
+	
+	// You can't use {lightgreen}, {red}, {blue} at the same message
+	// {default}: white
+	// {green}: orange
+	// {olive}: green
+	// {lightgreen}: lightgreen
+	// {red}: red
+	// {blue}: blue
+	"messages"  //display message to everyone (Non-admin)
+	{
+		"playerjoin"		"{default}{PLAYERTYPE}{green} {PLAYERNAME} {default}has {blue}joined the game{default}. ({green}From: {PLAYERCOUNTRY}{default})"
+		"playerdisc"		"{default}{PLAYERTYPE}{green} {PLAYERNAME} {red}left the game{default}. ({green}Reason: {DISC_REASON}{default})"
+	}
+	"messages_admin"  //only display message to adm
+	{
+		"playerjoin"		"{default}{PLAYERTYPE}{green} {PLAYERNAME} {default}has {blue}joined the game{default}. ({green}From: {PLAYERCOUNTRY}{default})"
+		"playerdisc"		"{default}{PLAYERTYPE}{green} {PLAYERNAME} {red}left the game{default}. ({green}Reason: {DISC_REASON}{default})"
+	}
+}

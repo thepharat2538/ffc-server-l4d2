@@ -1,0 +1,178 @@
+L 05/13/2024 - 00:09:45: SourceMod error session started
+L 05/13/2024 - 00:09:45: Info (map "c2m2_fairgrounds") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 00:09:45: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 00:09:45: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 00:09:45: [SM] Call stack trace:
+L 05/13/2024 - 00:09:45: [SM]   [0] GetEntPropString
+L 05/13/2024 - 00:09:45: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 00:09:45: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 00:09:46: Error log file session closed.
+L 05/13/2024 - 00:46:58: SourceMod error session started
+L 05/13/2024 - 00:46:58: Info (map "c1m2_streets") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 00:46:58: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 00:46:58: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 00:46:58: [SM] Call stack trace:
+L 05/13/2024 - 00:46:58: [SM]   [0] GetEntPropString
+L 05/13/2024 - 00:46:58: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 00:46:58: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 00:46:59: Error log file session closed.
+L 05/13/2024 - 00:47:54: SourceMod error session started
+L 05/13/2024 - 00:47:54: Info (map "c1m3_mall") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 00:47:54: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 00:47:54: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 00:47:54: [SM] Call stack trace:
+L 05/13/2024 - 00:47:54: [SM]   [0] GetEntPropString
+L 05/13/2024 - 00:47:54: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 00:47:54: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 00:53:59: Error log file session closed.
+L 05/13/2024 - 08:40:01: SourceMod error session started
+L 05/13/2024 - 08:40:01: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 08:40:01: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 08:40:01: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 08:40:01: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 08:40:01: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 08:40:08: SourceMod error session started
+L 05/13/2024 - 08:40:08: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 08:40:08: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 08:40:08: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 08:40:08: [SM] Call stack trace:
+L 05/13/2024 - 08:40:08: [SM]   [0] GetEntPropString
+L 05/13/2024 - 08:40:08: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 08:40:08: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 08:43:48: SourceMod error session started
+L 05/13/2024 - 08:43:48: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 08:43:48: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 08:43:48: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 08:43:48: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 08:43:48: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 09:14:05: Error log file session closed.
+L 05/13/2024 - 09:16:47: SourceMod error session started
+L 05/13/2024 - 09:16:47: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 09:16:47: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 09:16:47: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 09:16:47: [SM] Call stack trace:
+L 05/13/2024 - 09:16:47: [SM]   [0] GetEntPropString
+L 05/13/2024 - 09:16:47: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 09:16:47: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 09:17:02: Error log file session closed.
+L 05/13/2024 - 09:18:05: SourceMod error session started
+L 05/13/2024 - 09:18:05: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 09:18:05: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 09:18:05: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 09:18:05: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 09:18:05: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 09:20:13: SourceMod error session started
+L 05/13/2024 - 09:20:13: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 09:20:13: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 09:20:13: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 09:20:13: [SM] Call stack trace:
+L 05/13/2024 - 09:20:13: [SM]   [0] GetEntPropString
+L 05/13/2024 - 09:20:13: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 09:20:13: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 09:23:36: SourceMod error session started
+L 05/13/2024 - 09:23:36: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 09:23:36: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 09:23:36: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 09:23:36: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 09:23:36: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:01:56: Error log file session closed.
+L 05/13/2024 - 10:05:28: Error log file session closed.
+L 05/13/2024 - 10:07:09: SourceMod error session started
+L 05/13/2024 - 10:07:09: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:07:09: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:07:09: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 10:07:09: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 10:07:09: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:08:49: Error log file session closed.
+L 05/13/2024 - 10:10:21: SourceMod error session started
+L 05/13/2024 - 10:10:21: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:10:21: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 10:10:21: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 10:10:21: [SM] Call stack trace:
+L 05/13/2024 - 10:10:21: [SM]   [0] GetEntPropString
+L 05/13/2024 - 10:10:21: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 10:10:21: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 10:15:19: [SM] Exception reported: Entity -1 (-1) is invalid
+L 05/13/2024 - 10:15:19: [SM] Blaming: FFC/l4d2_sb_fix.smx
+L 05/13/2024 - 10:15:19: [SM] Call stack trace:
+L 05/13/2024 - 10:15:19: [SM]   [0] GetEntPropString
+L 05/13/2024 - 10:15:19: [SM]   [1] Line 766, /groups/sourcemod/compiler-1.10/include/entity.inc::GetEntityClassname
+L 05/13/2024 - 10:15:19: [SM]   [2] Line 1938, /home/forums/content/files/3/1/4/9/1/4/191277.attach::OnEntityDestroyed
+L 05/13/2024 - 10:15:54: SourceMod error session started
+L 05/13/2024 - 10:15:54: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:15:54: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:15:54: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 10:15:54: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 10:15:54: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:17:55: SourceMod error session started
+L 05/13/2024 - 10:17:55: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:17:55: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:17:55: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 10:17:55: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 10:17:55: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:44:04: Error log file session closed.
+L 05/13/2024 - 10:50:34: SourceMod error session started
+L 05/13/2024 - 10:50:34: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:50:34: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:50:34: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 10:50:34: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 10:50:34: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:51:44: Error log file session closed.
+L 05/13/2024 - 10:58:28: SourceMod error session started
+L 05/13/2024 - 10:58:28: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 10:58:28: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 10:58:28: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 10:58:28: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 10:58:28: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:18: SourceMod error session started
+L 05/13/2024 - 19:28:18: Info (map "c9m1_alleys") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:28:18: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:28:18: SourceMod error session started
+L 05/13/2024 - 19:28:18: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:28:18: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:28:18: SourceMod error session started
+L 05/13/2024 - 19:28:18: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:28:18: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:28:21: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:21: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 19:28:21: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 19:28:21: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:21: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:21: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 19:28:21: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 19:28:21: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:22: [UPDATER] --- BEGIN ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:28:22: [UPDATER] Could not download "http://update.sourcemod.net/update/"
+L 05/13/2024 - 19:28:22: [UPDATER] Error: The requested URL returned error: 503
+L 05/13/2024 - 19:28:22: [UPDATER] --- END ERRORS FROM AUTOMATIC UPDATER ---
+L 05/13/2024 - 19:29:03: Error log file session closed.
+L 05/13/2024 - 19:38:39: SourceMod error session started
+L 05/13/2024 - 19:38:39: Info (map "c5m1_waterfront") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:38:39: [SM] Failed to load plugin "nextmap.smx": Nextmap is incompatible with this game.
+L 05/13/2024 - 19:38:39: SourceMod error session started
+L 05/13/2024 - 19:38:39: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:38:39: [SM] Failed to load plugin "nextmap.smx": Nextmap is incompatible with this game.
+L 05/13/2024 - 19:38:39: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:38:40: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:38:40: SourceMod error session started
+L 05/13/2024 - 19:38:40: Info (map "c9m1_alleys") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:38:40: [SM] Failed to load plugin "nextmap.smx": Nextmap is incompatible with this game.
+L 05/13/2024 - 19:38:41: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:39:28: Error log file session closed.
+L 05/13/2024 - 19:45:30: SourceMod error session started
+L 05/13/2024 - 19:45:30: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:45:30: [SM] Failed to load plugin "nextmap.smx": Nextmap is incompatible with this game.
+L 05/13/2024 - 19:45:31: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:50:00: SourceMod error session started
+L 05/13/2024 - 19:50:00: Info (map "c2m1_highway") (file "/home/steam/Steam/steamapps/common/l4d2/left4dead2/addons/sourcemod/logs/errors_20240513.log")
+L 05/13/2024 - 19:50:00: [SM] Failed to load plugin "nextmap.smx": Nextmap is incompatible with this game.
+L 05/13/2024 - 19:50:00: [acs/acs.smx] Mission "tume" (Gamemode: coop) is not in the mission cache or no longer exists!
+
+L 05/13/2024 - 19:51:57: Error log file session closed.

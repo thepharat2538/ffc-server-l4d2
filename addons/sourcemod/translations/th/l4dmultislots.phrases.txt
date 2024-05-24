@@ -1,0 +1,49 @@
+//Thai by PS_FatCat
+
+"Phrases"
+{
+	"A surviving Bot was added."
+	{
+		"th" "บอทผู้รอดชีวิตถูกเพิ่มเข้ามาในทีม!"
+	}
+	"Impossible to generate a bot at the moment."
+	{
+		"th" "บอทผู้รอดชีวิตไม่สามารถสร้างได้ในขณะนี้"
+	}
+	"Please wait to be revived or rescued"
+	{
+		"th" "โปรดรอที่จะฟื้นคืนชีพหรือได้รับการช่วยเหลือ"
+	}
+	"You are idle. press the left mouse button to join the survivors!"
+	{
+		"th" "คลิก {olive}เมาส์ซ้าย{default} เพื่อเข้าร่วมเกม!"
+	}
+	"You are already on the team of survivors."
+	{
+		"th" "คุณอยู่ในทีมผู้รอดชีวิตแล้ว!"
+	}
+	"Type in chat !join To join the survivors"
+	{
+		"th" "พิมพ์ {olive}!join{default} เพื่อเข้าร่วมเกม!"
+	}
+	"The survivors has started the game, please wait to be resurrected or rescued"
+	{
+		"th" "ทีมของคุณเริ่มเกมแล้ว.\nคุณต้อง ฟื้นคืนชีพหรือได้รับการช่วยเหลือ."
+	}
+	"No Bots for replacement."
+	{
+		"th" "ไม่มีบอทให้เล่นในขณะนี้"
+	}
+	"No Second Chance"
+	{
+		"th" "คุณเล่น {blue}ทีมผู้รอดชีวิต{default}ในรอบนี้ไปแล้ว, คุณจะเกิดในสถานะ {green}ตาย{default}."
+	}
+	"Sorry! No survivor slots"
+	{
+		"th" "ขอโทษ! จำนวนผู้รอดชีวิตถึงขีดจำกัดแล้ว!"
+	}
+	"Too many survivors, unbalance"
+	{
+		"th" "ขอโทษ! ทีมไม่สมดุล ผู้เล่นมากเกินไปในทีมผู้รอดชีวิต!"
+	}
+}

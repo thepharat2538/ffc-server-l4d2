@@ -1,0 +1,112 @@
+﻿"Phrases"
+{
+	"welcome_msg"
+	{
+		"#format"	"{1:s}"
+		"th"		"เซิร์ฟเวอร์นี้ได้รับการป้องกันโดย Little Anti-Cheat {1}"
+	}
+
+	"kick_query_failure"
+	{
+		"th"		"ข้อผิดพลาด: Query response failure, โปรดรีสตาร์ทเกมหากปัญหานี้ยังคงอยู่"
+	}
+
+	"kick_interp_exploit"
+	{
+		"#format"	"{1:.0f},{2:d},{3:.3f}"
+		"th"		"ตรวจพบการเอาเปรียบ: Interp ของคุณสูงเกินไป ({1}ms / {2}ms max). โปรดตั้งค่า cl_interp ของคุณกลับไปเป็น {3} หรือต่ำกว่า"
+	}
+
+	"tban_ping_high"
+	{
+		"#format"	"{1:.0f},{2:d}"
+		"th"		"Ping ของคุณสูงเกินไป ({1} / {2} มากสุด)"
+	}
+
+	"kick_ban_generic"
+	{
+		"th"		"คุณถูกแบนจากเซิร์ฟเวอร์นี้"
+	}
+
+	"ban_angle"
+	{
+		"th"		"ตรวจพบ Angle-Cheats"
+	}
+
+	"ban_chat_clear"
+	{
+		"th"		"ตรวจพบ ล้างแชท"
+	}
+
+	"ban_convar"
+	{
+		"th"		"ตรวจพบ ConVar ที่ไม่ถูกต้อง"
+	}
+
+	"ban_nolerp"
+	{
+		"th"		"ตรวจพบ NoLerp"
+	}
+
+	"ban_bhop"
+	{
+		"th"		"ตรวจพบ Bhop"
+	}
+
+	"ban_aimbot"
+	{
+		"th"		"ตรวจพบ Aimbot"
+	}
+
+	"ban_aimlock"
+	{
+		"th"		"ตรวจพบ Aimlock"
+	}
+
+	"ban_anti_duck_delay"
+	{
+		"th" 		"ตรวจพบ Anti-Duck-Delay"
+	}
+
+	"ban_noisemaker"
+	{
+		"th" 		"ตรวจพบ ผู้ทำเสียงรบกวนอย่างต่อเนื่อง"
+	}
+
+	"ban_macro"
+	{
+		"th"		"ตรวจพบมาโคร"
+	}
+
+	"kick_macro"
+	{
+		"#format"	"{1:s}"
+		"th"		"{1} ไม่อนุญาตให้ใช้มาโครบนเซิร์ฟเวอร์นี้"
+	}
+
+	"chat_invalid_characters"
+	{
+		"th" 		"ข้อความแชทของคุณถูกบล็อก (เหตุผล: อักขระไม่ถูกต้อง)."
+	}
+
+	"chat_wide_char_spam"
+	{
+		"th"		"ข้อความแชทของคุณถูกบล็อก (เหตุผล: สแปมอักขระกว้าง)."
+	}
+
+	"kick_bad_name"
+	{
+		"th"		"ชื่อของคุณมีอักขระที่ไม่ถูกต้อง, โปรดเปลี่ยนชื่อของคุณ"
+	}
+
+	"ban_name_newline"
+	{
+		"th"		"ตรวจพบ ชื่อที่ขึ้นบรรทัดใหม่"
+	}
+
+	"admin_chat_warning_generic"
+	{
+		"#format"	"{1:s},{2:s},{3:d}"
+		"th"		"{1} เป็นผู้ต้องสงสัยว่าใช้ '{2}' (ตรวจจับครั้งที่: {3})"
+	}
+}
