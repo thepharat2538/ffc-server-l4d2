@@ -632,4 +632,96 @@
 	{
 		"en" "บ้านขยะ L4D1 (Ban Khaya L4D1)"
 	}
+	"bloodhapoc"
+	{
+		"en" "Blood Harvest APOCALYPSE"
+	}
+	"bloodharveststormmode"
+	{
+		"en" "Blood Harvest Storm"
+	}
+	"bloodwoods"
+	{
+		"en" "Blood Woods APOCALYPSE"
+	}
+	"coldstreamstormmode"
+	{
+		"en" "Cold Stream Storm"
+	}
+	"crashcoapoc"
+	{
+		"en" "Crash Course APOCALYPSE"
+	}
+	"crashcoursestormmode"
+	{
+		"en" "Crash Course Storm"
+	}
+	"darkcarnivalstormmode"
+	{
+		"en" "Dark Carnival Storm"
+	}
+	"deadairstormmode"
+	{
+		"en" "Dead Air Storm"
+	}
+	"deadcenterstormmode"
+	{
+		"en" "Dead Center Storm"
+	}
+	"deathtollapoc"
+	{
+		"en" "Death Toll APOCALYPSE"
+	}
+	"deathtollstormmode"
+	{
+		"en" "Death Toll Storm"
+	}
+	"lighthousestorm"
+	{
+		"en" "The Last Stand Storm"
+	}
+	"nomercyapocn"
+	{
+		"en" "No Mercy APOCALYPSE"
+	}
+	"nomercystormmode"
+	{
+		"en" "No Mercy Storm"
+	}
+	"sacrificestormmode"
+	{
+		"en" "The Sacrifice Storm"
+	}
+	"ShortCarnival"
+	{
+		"en" "Short Carnival"
+	}
+	"ShortAir"
+	{
+		"en" "Short Air"
+	}
+	"ShortHarvest"
+	{
+		"en" "Short Harvest"
+	}
+	"ShortToll"
+	{
+		"en" "Short Toll"
+	}
+	"ShortCenter"
+	{
+		"en" "Short Center"
+	}
+	"ShortFever"
+	{
+		"en" "Short Fever"
+	}
+	"swampfeverstormmode"
+	{
+		"en" "Swamp Fever Storm"
+	}
+	"theparishstormmode"
+	{
+		"en" "The Parish Storm"
+	}
 }

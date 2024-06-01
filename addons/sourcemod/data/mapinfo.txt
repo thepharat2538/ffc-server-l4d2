@@ -84,4 +84,14 @@
 	{
 		"lockdown_system-l4d2_off" "1"
 	}
+
+	"Cmentarz"
+	{
+		"lockdown_system-l4d2_off" "1"
+	}
+	
+	"c10m3_ranchhouse_storm"
+	{
+		"lockdown_system-l4d2_off" "1"
+	}
 }
