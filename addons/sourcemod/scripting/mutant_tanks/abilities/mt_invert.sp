@@ -1,6 +1,6 @@
 /**
  * Mutant Tanks: a L4D/L4D2 SourceMod Plugin
- * Copyright (C) 2023  Alfred "Psyk0tik" Llagas
+ * Copyright (C) 2024  Alfred "Psyk0tik" Llagas
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
@@ -86,13 +86,42 @@ enum struct esInvertPlayer
 	int g_iInvertHitMode;
 	int g_iInvertMessage;
 	int g_iInvertRangeCooldown;
+	int g_iInvertSight;
 	int g_iOwner;
 	int g_iRangeCooldown;
 	int g_iRequiresHumans;
 	int g_iTankType;
+	int g_iTankTypeRecorded;
 }
 
 esInvertPlayer g_esInvertPlayer[MAXPLAYERS + 1];
+
+enum struct esInvertTeammate
+{
+	float g_flCloseAreasOnly;
+	float g_flInvertChance;
+	float g_flInvertDuration;
+	float g_flInvertRange;
+	float g_flInvertRangeChance;
+	float g_flOpenAreasOnly;
+
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanRangeCooldown;
+	int g_iInvertAbility;
+	int g_iInvertCooldown;
+	int g_iInvertEffect;
+	int g_iInvertHit;
+	int g_iInvertHitMode;
+	int g_iInvertMessage;
+	int g_iInvertRangeCooldown;
+	int g_iInvertSight;
+	int g_iRequiresHumans;
+}
+
+esInvertTeammate g_esInvertTeammate[MAXPLAYERS + 1];
 
 enum struct esInvertAbility
 {
@@ -117,10 +146,38 @@ enum struct esInvertAbility
 	int g_iInvertHitMode;
 	int g_iInvertMessage;
 	int g_iInvertRangeCooldown;
+	int g_iInvertSight;
 	int g_iRequiresHumans;
 }
 
 esInvertAbility g_esInvertAbility[MT_MAXTYPES + 1];
+
+enum struct esInvertSpecial
+{
+	float g_flCloseAreasOnly;
+	float g_flInvertChance;
+	float g_flInvertDuration;
+	float g_flInvertRange;
+	float g_flInvertRangeChance;
+	float g_flOpenAreasOnly;
+
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanRangeCooldown;
+	int g_iInvertAbility;
+	int g_iInvertCooldown;
+	int g_iInvertEffect;
+	int g_iInvertHit;
+	int g_iInvertHitMode;
+	int g_iInvertMessage;
+	int g_iInvertRangeCooldown;
+	int g_iInvertSight;
+	int g_iRequiresHumans;
+}
+
+esInvertSpecial g_esInvertSpecial[MT_MAXTYPES + 1];
 
 enum struct esInvertCache
 {
@@ -143,6 +200,7 @@ enum struct esInvertCache
 	int g_iInvertHitMode;
 	int g_iInvertMessage;
 	int g_iInvertRangeCooldown;
+	int g_iInvertSight;
 	int g_iRequiresHumans;
 }
 
@@ -354,11 +412,6 @@ Action aInvertPlayerRunCmd(int client, int &buttons, float vel[3])
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 #endif
 {
-	if (!MT_IsCorePluginEnabled())
-	{
-		return Plugin_Continue;
-	}
-
 	if (bIsSurvivor(client) && g_esInvertPlayer[client].g_bAffected)
 	{
 		vel[0] = -vel[0];
@@ -393,25 +446,30 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 
 Action OnInvertTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	if (MT_IsCorePluginEnabled() && bIsValidClient(victim, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE) && bIsValidEntity(inflictor) && damage > 0.0)
+	if (MT_IsCorePluginEnabled() && bIsValidClient(victim, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE) && damage > 0.0)
 	{
 		char sClassname[32];
-		GetEntityClassname(inflictor, sClassname, sizeof sClassname);
+		if (bIsValidEntity(inflictor))
+		{
+			GetEntityClassname(inflictor, sClassname, sizeof sClassname);
+		}
+
 		if (MT_IsTankSupported(attacker) && MT_IsCustomTankSupported(attacker) && (g_esInvertCache[attacker].g_iInvertHitMode == 0 || g_esInvertCache[attacker].g_iInvertHitMode == 1) && bIsSurvivor(victim) && g_esInvertCache[attacker].g_iComboAbility == 0)
 		{
-			if ((!MT_HasAdminAccess(attacker) && !bHasAdminAccess(attacker, g_esInvertAbility[g_esInvertPlayer[attacker].g_iTankType].g_iAccessFlags, g_esInvertPlayer[attacker].g_iAccessFlags)) || MT_IsAdminImmune(victim, attacker) || bIsAdminImmune(victim, g_esInvertPlayer[attacker].g_iTankType, g_esInvertAbility[g_esInvertPlayer[attacker].g_iTankType].g_iImmunityFlags, g_esInvertPlayer[victim].g_iImmunityFlags))
+			if ((!MT_HasAdminAccess(attacker) && !bHasAdminAccess(attacker, g_esInvertAbility[g_esInvertPlayer[attacker].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[attacker].g_iAccessFlags)) || MT_IsAdminImmune(victim, attacker) || bIsAdminImmune(victim, g_esInvertPlayer[attacker].g_iTankType, g_esInvertAbility[g_esInvertPlayer[attacker].g_iTankTypeRecorded].g_iImmunityFlags, g_esInvertPlayer[victim].g_iImmunityFlags))
 			{
 				return Plugin_Continue;
 			}
 
-			if (StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock"))
+			bool bCaught = bIsSurvivorCaught(victim);
+			if ((bIsSpecialInfected(attacker) && (bCaught || (!bCaught && (damagetype & DMG_CLUB)) || (bIsSpitter(attacker) && StrEqual(sClassname, "insect_swarm")))) || StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock"))
 			{
 				vInvertHit(victim, attacker, GetRandomFloat(0.1, 100.0), g_esInvertCache[attacker].g_flInvertChance, g_esInvertCache[attacker].g_iInvertHit, MT_MESSAGE_MELEE, MT_ATTACK_CLAW);
 			}
 		}
 		else if (MT_IsTankSupported(victim) && MT_IsCustomTankSupported(victim) && (g_esInvertCache[victim].g_iInvertHitMode == 0 || g_esInvertCache[victim].g_iInvertHitMode == 2) && bIsSurvivor(attacker) && g_esInvertCache[victim].g_iComboAbility == 0)
 		{
-			if ((!MT_HasAdminAccess(victim) && !bHasAdminAccess(victim, g_esInvertAbility[g_esInvertPlayer[victim].g_iTankType].g_iAccessFlags, g_esInvertPlayer[victim].g_iAccessFlags)) || MT_IsAdminImmune(attacker, victim) || bIsAdminImmune(attacker, g_esInvertPlayer[victim].g_iTankType, g_esInvertAbility[g_esInvertPlayer[victim].g_iTankType].g_iImmunityFlags, g_esInvertPlayer[attacker].g_iImmunityFlags))
+			if ((!MT_HasAdminAccess(victim) && !bHasAdminAccess(victim, g_esInvertAbility[g_esInvertPlayer[victim].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[victim].g_iAccessFlags)) || MT_IsAdminImmune(attacker, victim) || bIsAdminImmune(attacker, g_esInvertPlayer[victim].g_iTankType, g_esInvertAbility[g_esInvertPlayer[victim].g_iTankTypeRecorded].g_iImmunityFlags, g_esInvertPlayer[attacker].g_iImmunityFlags))
 			{
 				return Plugin_Continue;
 			}
@@ -453,7 +511,7 @@ void vInvertCombineAbilities(int tank, int type, const float random, const char[
 public void MT_OnCombineAbilities(int tank, int type, const float random, const char[] combo, int survivor, int weapon, const char[] classname)
 #endif
 {
-	if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility != 2)
+	if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility != 2)
 	{
 		return;
 	}
@@ -545,8 +603,7 @@ public void MT_OnConfigsLoad(int mode)
 	{
 		case 1:
 		{
-			int iMaxType = MT_GetMaxType();
-			for (int iIndex = MT_GetMinType(); iIndex <= iMaxType; iIndex++)
+			for (int iIndex = MT_GetMinType(); iIndex <= MT_GetMaxType(); iIndex++)
 			{
 				g_esInvertAbility[iIndex].g_iAccessFlags = 0;
 				g_esInvertAbility[iIndex].g_iImmunityFlags = 0;
@@ -569,95 +626,190 @@ public void MT_OnConfigsLoad(int mode)
 				g_esInvertAbility[iIndex].g_flInvertRange = 150.0;
 				g_esInvertAbility[iIndex].g_flInvertRangeChance = 15.0;
 				g_esInvertAbility[iIndex].g_iInvertRangeCooldown = 0;
+				g_esInvertAbility[iIndex].g_iInvertSight = 0;
+
+				g_esInvertSpecial[iIndex].g_flCloseAreasOnly = -1.0;
+				g_esInvertSpecial[iIndex].g_iComboAbility = -1;
+				g_esInvertSpecial[iIndex].g_iHumanAbility = -1;
+				g_esInvertSpecial[iIndex].g_iHumanAmmo = -1;
+				g_esInvertSpecial[iIndex].g_iHumanCooldown = -1;
+				g_esInvertSpecial[iIndex].g_iHumanRangeCooldown = -1;
+				g_esInvertSpecial[iIndex].g_flOpenAreasOnly = -1.0;
+				g_esInvertSpecial[iIndex].g_iRequiresHumans = -1;
+				g_esInvertSpecial[iIndex].g_iInvertAbility = -1;
+				g_esInvertSpecial[iIndex].g_iInvertEffect = -1;
+				g_esInvertSpecial[iIndex].g_iInvertMessage = -1;
+				g_esInvertSpecial[iIndex].g_flInvertChance = -1.0;
+				g_esInvertSpecial[iIndex].g_iInvertCooldown = -1;
+				g_esInvertSpecial[iIndex].g_flInvertDuration = -1.0;
+				g_esInvertSpecial[iIndex].g_iInvertHit = -1;
+				g_esInvertSpecial[iIndex].g_iInvertHitMode = -1;
+				g_esInvertSpecial[iIndex].g_flInvertRange = -1.0;
+				g_esInvertSpecial[iIndex].g_flInvertRangeChance = -1.0;
+				g_esInvertSpecial[iIndex].g_iInvertRangeCooldown = -1;
+				g_esInvertSpecial[iIndex].g_iInvertSight = -1;
 			}
 		}
 		case 3:
 		{
 			for (int iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 			{
-				if (bIsValidClient(iPlayer))
-				{
-					g_esInvertPlayer[iPlayer].g_iAccessFlags = 0;
-					g_esInvertPlayer[iPlayer].g_iImmunityFlags = 0;
-					g_esInvertPlayer[iPlayer].g_flCloseAreasOnly = 0.0;
-					g_esInvertPlayer[iPlayer].g_iComboAbility = 0;
-					g_esInvertPlayer[iPlayer].g_iHumanAbility = 0;
-					g_esInvertPlayer[iPlayer].g_iHumanAmmo = 0;
-					g_esInvertPlayer[iPlayer].g_iHumanCooldown = 0;
-					g_esInvertPlayer[iPlayer].g_iHumanRangeCooldown = 0;
-					g_esInvertPlayer[iPlayer].g_flOpenAreasOnly = 0.0;
-					g_esInvertPlayer[iPlayer].g_iRequiresHumans = 0;
-					g_esInvertPlayer[iPlayer].g_iInvertAbility = 0;
-					g_esInvertPlayer[iPlayer].g_iInvertEffect = 0;
-					g_esInvertPlayer[iPlayer].g_iInvertMessage = 0;
-					g_esInvertPlayer[iPlayer].g_flInvertChance = 0.0;
-					g_esInvertPlayer[iPlayer].g_iInvertCooldown = 0;
-					g_esInvertPlayer[iPlayer].g_flInvertDuration = 0.0;
-					g_esInvertPlayer[iPlayer].g_iInvertHit = 0;
-					g_esInvertPlayer[iPlayer].g_iInvertHitMode = 0;
-					g_esInvertPlayer[iPlayer].g_flInvertRange = 0.0;
-					g_esInvertPlayer[iPlayer].g_flInvertRangeChance = 0.0;
-					g_esInvertPlayer[iPlayer].g_iInvertRangeCooldown = 0;
-				}
+				g_esInvertPlayer[iPlayer].g_iAccessFlags = -1;
+				g_esInvertPlayer[iPlayer].g_iImmunityFlags = -1;
+				g_esInvertPlayer[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esInvertPlayer[iPlayer].g_iComboAbility = -1;
+				g_esInvertPlayer[iPlayer].g_iHumanAbility = -1;
+				g_esInvertPlayer[iPlayer].g_iHumanAmmo = -1;
+				g_esInvertPlayer[iPlayer].g_iHumanCooldown = -1;
+				g_esInvertPlayer[iPlayer].g_iHumanRangeCooldown = -1;
+				g_esInvertPlayer[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esInvertPlayer[iPlayer].g_iRequiresHumans = -1;
+				g_esInvertPlayer[iPlayer].g_iInvertAbility = -1;
+				g_esInvertPlayer[iPlayer].g_iInvertEffect = -1;
+				g_esInvertPlayer[iPlayer].g_iInvertMessage = -1;
+				g_esInvertPlayer[iPlayer].g_flInvertChance = -1.0;
+				g_esInvertPlayer[iPlayer].g_iInvertCooldown = -1;
+				g_esInvertPlayer[iPlayer].g_flInvertDuration = -1.0;
+				g_esInvertPlayer[iPlayer].g_iInvertHit = -1;
+				g_esInvertPlayer[iPlayer].g_iInvertHitMode = -1;
+				g_esInvertPlayer[iPlayer].g_flInvertRange = -1.0;
+				g_esInvertPlayer[iPlayer].g_flInvertRangeChance = -1.0;
+				g_esInvertPlayer[iPlayer].g_iInvertRangeCooldown = -1;
+				g_esInvertPlayer[iPlayer].g_iInvertSight = -1;
+
+				g_esInvertTeammate[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esInvertTeammate[iPlayer].g_iComboAbility = -1;
+				g_esInvertTeammate[iPlayer].g_iHumanAbility = -1;
+				g_esInvertTeammate[iPlayer].g_iHumanAmmo = -1;
+				g_esInvertTeammate[iPlayer].g_iHumanCooldown = -1;
+				g_esInvertTeammate[iPlayer].g_iHumanRangeCooldown = -1;
+				g_esInvertTeammate[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esInvertTeammate[iPlayer].g_iRequiresHumans = -1;
+				g_esInvertTeammate[iPlayer].g_iInvertAbility = -1;
+				g_esInvertTeammate[iPlayer].g_iInvertEffect = -1;
+				g_esInvertTeammate[iPlayer].g_iInvertMessage = -1;
+				g_esInvertTeammate[iPlayer].g_flInvertChance = -1.0;
+				g_esInvertTeammate[iPlayer].g_iInvertCooldown = -1;
+				g_esInvertTeammate[iPlayer].g_flInvertDuration = -1.0;
+				g_esInvertTeammate[iPlayer].g_iInvertHit = -1;
+				g_esInvertTeammate[iPlayer].g_iInvertHitMode = -1;
+				g_esInvertTeammate[iPlayer].g_flInvertRange = -1.0;
+				g_esInvertTeammate[iPlayer].g_flInvertRangeChance = -1.0;
+				g_esInvertTeammate[iPlayer].g_iInvertRangeCooldown = -1;
+				g_esInvertTeammate[iPlayer].g_iInvertSight = -1;
 			}
 		}
 	}
 }
 
 #if defined MT_ABILITIES_MAIN
-void vInvertConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+void vInvertConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #else
-public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #endif
 {
-	if (mode == 3 && bIsValidClient(admin))
+	if ((mode == -1 || mode == 3) && bIsValidClient(admin))
 	{
-		g_esInvertPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertPlayer[admin].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esInvertPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertPlayer[admin].g_iComboAbility, value, 0, 1);
-		g_esInvertPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertPlayer[admin].g_iHumanAbility, value, 0, 2);
-		g_esInvertPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertPlayer[admin].g_iHumanAmmo, value, 0, 99999);
-		g_esInvertPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertPlayer[admin].g_iHumanCooldown, value, 0, 99999);
-		g_esInvertPlayer[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertPlayer[admin].g_iHumanRangeCooldown, value, 0, 99999);
-		g_esInvertPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertPlayer[admin].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esInvertPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertPlayer[admin].g_iRequiresHumans, value, 0, 32);
-		g_esInvertPlayer[admin].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertPlayer[admin].g_iInvertAbility, value, 0, 1);
-		g_esInvertPlayer[admin].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertPlayer[admin].g_iInvertEffect, value, 0, 7);
-		g_esInvertPlayer[admin].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertPlayer[admin].g_iInvertMessage, value, 0, 3);
-		g_esInvertPlayer[admin].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertPlayer[admin].g_flInvertChance, value, 0.0, 100.0);
-		g_esInvertPlayer[admin].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertPlayer[admin].g_iInvertCooldown, value, 0, 99999);
-		g_esInvertPlayer[admin].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertPlayer[admin].g_flInvertDuration, value, 0.1, 99999.0);
-		g_esInvertPlayer[admin].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertPlayer[admin].g_iInvertHit, value, 0, 1);
-		g_esInvertPlayer[admin].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertPlayer[admin].g_iInvertHitMode, value, 0, 2);
-		g_esInvertPlayer[admin].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertPlayer[admin].g_flInvertRange, value, 1.0, 99999.0);
-		g_esInvertPlayer[admin].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertPlayer[admin].g_flInvertRangeChance, value, 0.0, 100.0);
-		g_esInvertPlayer[admin].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertPlayer[admin].g_iInvertRangeCooldown, value, 0, 99999);
-		g_esInvertPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
-		g_esInvertPlayer[admin].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esInvertTeammate[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertTeammate[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esInvertTeammate[admin].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertTeammate[admin].g_iComboAbility, value, -1, 1);
+			g_esInvertTeammate[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertTeammate[admin].g_iHumanAbility, value, -1, 2);
+			g_esInvertTeammate[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertTeammate[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esInvertTeammate[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertTeammate[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esInvertTeammate[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertTeammate[admin].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esInvertTeammate[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertTeammate[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esInvertTeammate[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertTeammate[admin].g_iRequiresHumans, value, -1, 32);
+			g_esInvertTeammate[admin].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertTeammate[admin].g_iInvertAbility, value, -1, 1);
+			g_esInvertTeammate[admin].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertTeammate[admin].g_iInvertEffect, value, -1, 7);
+			g_esInvertTeammate[admin].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertTeammate[admin].g_iInvertMessage, value, -1, 3);
+			g_esInvertTeammate[admin].g_iInvertSight = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esInvertTeammate[admin].g_iInvertSight, value, -1, 5);
+			g_esInvertTeammate[admin].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertTeammate[admin].g_flInvertChance, value, -1.0, 100.0);
+			g_esInvertTeammate[admin].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertTeammate[admin].g_iInvertCooldown, value, -1, 99999);
+			g_esInvertTeammate[admin].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertTeammate[admin].g_flInvertDuration, value, -1.0, 99999.0);
+			g_esInvertTeammate[admin].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertTeammate[admin].g_iInvertHit, value, -1, 1);
+			g_esInvertTeammate[admin].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertTeammate[admin].g_iInvertHitMode, value, -1, 2);
+			g_esInvertTeammate[admin].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertTeammate[admin].g_flInvertRange, value, -1.0, 99999.0);
+			g_esInvertTeammate[admin].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertTeammate[admin].g_flInvertRangeChance, value, -1.0, 100.0);
+			g_esInvertTeammate[admin].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertTeammate[admin].g_iInvertRangeCooldown, value, -1, 99999);
+		}
+		else
+		{
+			g_esInvertPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertPlayer[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esInvertPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertPlayer[admin].g_iComboAbility, value, -1, 1);
+			g_esInvertPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertPlayer[admin].g_iHumanAbility, value, -1, 2);
+			g_esInvertPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertPlayer[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esInvertPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertPlayer[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esInvertPlayer[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertPlayer[admin].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esInvertPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertPlayer[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esInvertPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertPlayer[admin].g_iRequiresHumans, value, -1, 32);
+			g_esInvertPlayer[admin].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertPlayer[admin].g_iInvertAbility, value, -1, 1);
+			g_esInvertPlayer[admin].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertPlayer[admin].g_iInvertEffect, value, -1, 7);
+			g_esInvertPlayer[admin].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertPlayer[admin].g_iInvertMessage, value, -1, 3);
+			g_esInvertPlayer[admin].g_iInvertSight = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esInvertPlayer[admin].g_iInvertSight, value, -1, 5);
+			g_esInvertPlayer[admin].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertPlayer[admin].g_flInvertChance, value, -1.0, 100.0);
+			g_esInvertPlayer[admin].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertPlayer[admin].g_iInvertCooldown, value, -1, 99999);
+			g_esInvertPlayer[admin].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertPlayer[admin].g_flInvertDuration, value, -1.0, 99999.0);
+			g_esInvertPlayer[admin].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertPlayer[admin].g_iInvertHit, value, -1, 1);
+			g_esInvertPlayer[admin].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertPlayer[admin].g_iInvertHitMode, value, -1, 2);
+			g_esInvertPlayer[admin].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertPlayer[admin].g_flInvertRange, value, -1.0, 99999.0);
+			g_esInvertPlayer[admin].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertPlayer[admin].g_flInvertRangeChance, value, -1.0, 100.0);
+			g_esInvertPlayer[admin].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertPlayer[admin].g_iInvertRangeCooldown, value, -1, 99999);
+			g_esInvertPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+			g_esInvertPlayer[admin].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		}
 	}
 
 	if (mode < 3 && type > 0)
 	{
-		g_esInvertAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertAbility[type].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esInvertAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertAbility[type].g_iComboAbility, value, 0, 1);
-		g_esInvertAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertAbility[type].g_iHumanAbility, value, 0, 2);
-		g_esInvertAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertAbility[type].g_iHumanAmmo, value, 0, 99999);
-		g_esInvertAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertAbility[type].g_iHumanCooldown, value, 0, 99999);
-		g_esInvertAbility[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertAbility[type].g_iHumanRangeCooldown, value, 0, 99999);
-		g_esInvertAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertAbility[type].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esInvertAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertAbility[type].g_iRequiresHumans, value, 0, 32);
-		g_esInvertAbility[type].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertAbility[type].g_iInvertAbility, value, 0, 1);
-		g_esInvertAbility[type].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertAbility[type].g_iInvertEffect, value, 0, 7);
-		g_esInvertAbility[type].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertAbility[type].g_iInvertMessage, value, 0, 3);
-		g_esInvertAbility[type].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertAbility[type].g_flInvertChance, value, 0.0, 100.0);
-		g_esInvertAbility[type].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertAbility[type].g_iInvertCooldown, value, 0, 99999);
-		g_esInvertAbility[type].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertAbility[type].g_flInvertDuration, value, 0.1, 99999.0);
-		g_esInvertAbility[type].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertAbility[type].g_iInvertHit, value, 0, 1);
-		g_esInvertAbility[type].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertAbility[type].g_iInvertHitMode, value, 0, 2);
-		g_esInvertAbility[type].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertAbility[type].g_flInvertRange, value, 1.0, 99999.0);
-		g_esInvertAbility[type].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertAbility[type].g_flInvertRangeChance, value, 0.0, 100.0);
-		g_esInvertAbility[type].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertAbility[type].g_iInvertRangeCooldown, value, 0, 99999);
-		g_esInvertAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
-		g_esInvertAbility[type].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esInvertSpecial[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertSpecial[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esInvertSpecial[type].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertSpecial[type].g_iComboAbility, value, -1, 1);
+			g_esInvertSpecial[type].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertSpecial[type].g_iHumanAbility, value, -1, 2);
+			g_esInvertSpecial[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertSpecial[type].g_iHumanAmmo, value, -1, 99999);
+			g_esInvertSpecial[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertSpecial[type].g_iHumanCooldown, value, -1, 99999);
+			g_esInvertSpecial[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertSpecial[type].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esInvertSpecial[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertSpecial[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esInvertSpecial[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertSpecial[type].g_iRequiresHumans, value, -1, 32);
+			g_esInvertSpecial[type].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertSpecial[type].g_iInvertAbility, value, -1, 1);
+			g_esInvertSpecial[type].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertSpecial[type].g_iInvertEffect, value, -1, 7);
+			g_esInvertSpecial[type].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertSpecial[type].g_iInvertMessage, value, -1, 3);
+			g_esInvertSpecial[type].g_iInvertSight = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esInvertSpecial[type].g_iInvertSight, value, -1, 5);
+			g_esInvertSpecial[type].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertSpecial[type].g_flInvertChance, value, -1.0, 100.0);
+			g_esInvertSpecial[type].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertSpecial[type].g_iInvertCooldown, value, -1, 99999);
+			g_esInvertSpecial[type].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertSpecial[type].g_flInvertDuration, value, -1.0, 99999.0);
+			g_esInvertSpecial[type].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertSpecial[type].g_iInvertHit, value, -1, 1);
+			g_esInvertSpecial[type].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertSpecial[type].g_iInvertHitMode, value, -1, 2);
+			g_esInvertSpecial[type].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertSpecial[type].g_flInvertRange, value, -1.0, 99999.0);
+			g_esInvertSpecial[type].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertSpecial[type].g_flInvertRangeChance, value, -1.0, 100.0);
+			g_esInvertSpecial[type].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertSpecial[type].g_iInvertRangeCooldown, value, -1, 99999);
+		}
+		else
+		{
+			g_esInvertAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esInvertAbility[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esInvertAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esInvertAbility[type].g_iComboAbility, value, -1, 1);
+			g_esInvertAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esInvertAbility[type].g_iHumanAbility, value, -1, 2);
+			g_esInvertAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esInvertAbility[type].g_iHumanAmmo, value, -1, 99999);
+			g_esInvertAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esInvertAbility[type].g_iHumanCooldown, value, -1, 99999);
+			g_esInvertAbility[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esInvertAbility[type].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esInvertAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esInvertAbility[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esInvertAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esInvertAbility[type].g_iRequiresHumans, value, -1, 32);
+			g_esInvertAbility[type].g_iInvertAbility = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esInvertAbility[type].g_iInvertAbility, value, -1, 1);
+			g_esInvertAbility[type].g_iInvertEffect = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esInvertAbility[type].g_iInvertEffect, value, -1, 7);
+			g_esInvertAbility[type].g_iInvertMessage = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esInvertAbility[type].g_iInvertMessage, value, -1, 3);
+			g_esInvertAbility[type].g_iInvertSight = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esInvertAbility[type].g_iInvertSight, value, -1, 5);
+			g_esInvertAbility[type].g_flInvertChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertChance", "Invert Chance", "Invert_Chance", "chance", g_esInvertAbility[type].g_flInvertChance, value, -1.0, 100.0);
+			g_esInvertAbility[type].g_iInvertCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertCooldown", "Invert Cooldown", "Invert_Cooldown", "cooldown", g_esInvertAbility[type].g_iInvertCooldown, value, -1, 99999);
+			g_esInvertAbility[type].g_flInvertDuration = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertDuration", "Invert Duration", "Invert_Duration", "duration", g_esInvertAbility[type].g_flInvertDuration, value, -1.0, 99999.0);
+			g_esInvertAbility[type].g_iInvertHit = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHit", "Invert Hit", "Invert_Hit", "hit", g_esInvertAbility[type].g_iInvertHit, value, -1, 1);
+			g_esInvertAbility[type].g_iInvertHitMode = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertHitMode", "Invert Hit Mode", "Invert_Hit_Mode", "hitmde", g_esInvertAbility[type].g_iInvertHitMode, value, -1, 2);
+			g_esInvertAbility[type].g_flInvertRange = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRange", "Invert Range", "Invert_Range", "range", g_esInvertAbility[type].g_flInvertRange, value, -1.0, 99999.0);
+			g_esInvertAbility[type].g_flInvertRangeChance = flGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeChance", "Invert Range Chance", "Invert_Range_Chance", "rangechance", g_esInvertAbility[type].g_flInvertRangeChance, value, -1.0, 100.0);
+			g_esInvertAbility[type].g_iInvertRangeCooldown = iGetKeyValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "InvertRangeCooldown", "Invert Range Cooldown", "Invert_Range_Cooldown", "rangecooldown", g_esInvertAbility[type].g_iInvertRangeCooldown, value, -1, 99999);
+			g_esInvertAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+			g_esInvertAbility[type].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_INVERT_SECTION, MT_INVERT_SECTION2, MT_INVERT_SECTION3, MT_INVERT_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		}
 	}
 }
 
@@ -667,27 +819,57 @@ void vInvertSettingsCached(int tank, bool apply, int type)
 public void MT_OnSettingsCached(int tank, bool apply, int type)
 #endif
 {
-	bool bHuman = bIsTank(tank, MT_CHECK_FAKECLIENT);
-	g_esInvertCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flCloseAreasOnly, g_esInvertAbility[type].g_flCloseAreasOnly);
-	g_esInvertCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iComboAbility, g_esInvertAbility[type].g_iComboAbility);
-	g_esInvertCache[tank].g_flInvertChance = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertChance, g_esInvertAbility[type].g_flInvertChance);
-	g_esInvertCache[tank].g_flInvertDuration = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertDuration, g_esInvertAbility[type].g_flInvertDuration);
-	g_esInvertCache[tank].g_flInvertRange = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertRange, g_esInvertAbility[type].g_flInvertRange);
-	g_esInvertCache[tank].g_flInvertRangeChance = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertRangeChance, g_esInvertAbility[type].g_flInvertRangeChance);
-	g_esInvertCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanAbility, g_esInvertAbility[type].g_iHumanAbility);
-	g_esInvertCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanAmmo, g_esInvertAbility[type].g_iHumanAmmo);
-	g_esInvertCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanCooldown, g_esInvertAbility[type].g_iHumanCooldown);
-	g_esInvertCache[tank].g_iHumanRangeCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanRangeCooldown, g_esInvertAbility[type].g_iHumanRangeCooldown);
-	g_esInvertCache[tank].g_iInvertAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertAbility, g_esInvertAbility[type].g_iInvertAbility);
-	g_esInvertCache[tank].g_iInvertCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertCooldown, g_esInvertAbility[type].g_iInvertCooldown);
-	g_esInvertCache[tank].g_iInvertEffect = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertEffect, g_esInvertAbility[type].g_iInvertEffect);
-	g_esInvertCache[tank].g_iInvertHit = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertHit, g_esInvertAbility[type].g_iInvertHit);
-	g_esInvertCache[tank].g_iInvertHitMode = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertHitMode, g_esInvertAbility[type].g_iInvertHitMode);
-	g_esInvertCache[tank].g_iInvertMessage = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertMessage, g_esInvertAbility[type].g_iInvertMessage);
-	g_esInvertCache[tank].g_iInvertRangeCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertRangeCooldown, g_esInvertAbility[type].g_iInvertRangeCooldown);
-	g_esInvertCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flOpenAreasOnly, g_esInvertAbility[type].g_flOpenAreasOnly);
-	g_esInvertCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iRequiresHumans, g_esInvertAbility[type].g_iRequiresHumans);
+	bool bHuman = bIsValidClient(tank, MT_CHECK_FAKECLIENT);
+	g_esInvertPlayer[tank].g_iTankTypeRecorded = apply ? MT_GetRecordedTankType(tank, type) : 0;
 	g_esInvertPlayer[tank].g_iTankType = apply ? type : 0;
+	int iType = g_esInvertPlayer[tank].g_iTankTypeRecorded;
+
+	if (bIsSpecialInfected(tank, MT_CHECK_INDEX|MT_CHECK_INGAME))
+	{
+		g_esInvertCache[tank].g_flCloseAreasOnly = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flCloseAreasOnly, g_esInvertPlayer[tank].g_flCloseAreasOnly, g_esInvertSpecial[iType].g_flCloseAreasOnly, g_esInvertAbility[iType].g_flCloseAreasOnly, 1);
+		g_esInvertCache[tank].g_iComboAbility = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iComboAbility, g_esInvertPlayer[tank].g_iComboAbility, g_esInvertSpecial[iType].g_iComboAbility, g_esInvertAbility[iType].g_iComboAbility, 1);
+		g_esInvertCache[tank].g_flInvertChance = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flInvertChance, g_esInvertPlayer[tank].g_flInvertChance, g_esInvertSpecial[iType].g_flInvertChance, g_esInvertAbility[iType].g_flInvertChance, 1);
+		g_esInvertCache[tank].g_flInvertDuration = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flInvertDuration, g_esInvertPlayer[tank].g_flInvertDuration, g_esInvertSpecial[iType].g_flInvertDuration, g_esInvertAbility[iType].g_flInvertDuration, 1);
+		g_esInvertCache[tank].g_flInvertRange = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flInvertRange, g_esInvertPlayer[tank].g_flInvertRange, g_esInvertSpecial[iType].g_flInvertRange, g_esInvertAbility[iType].g_flInvertRange, 1);
+		g_esInvertCache[tank].g_flInvertRangeChance = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flInvertRangeChance, g_esInvertPlayer[tank].g_flInvertRangeChance, g_esInvertSpecial[iType].g_flInvertRangeChance, g_esInvertAbility[iType].g_flInvertRangeChance, 1);
+		g_esInvertCache[tank].g_iHumanAbility = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iHumanAbility, g_esInvertPlayer[tank].g_iHumanAbility, g_esInvertSpecial[iType].g_iHumanAbility, g_esInvertAbility[iType].g_iHumanAbility, 1);
+		g_esInvertCache[tank].g_iHumanAmmo = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iHumanAmmo, g_esInvertPlayer[tank].g_iHumanAmmo, g_esInvertSpecial[iType].g_iHumanAmmo, g_esInvertAbility[iType].g_iHumanAmmo, 1);
+		g_esInvertCache[tank].g_iHumanCooldown = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iHumanCooldown, g_esInvertPlayer[tank].g_iHumanCooldown, g_esInvertSpecial[iType].g_iHumanCooldown, g_esInvertAbility[iType].g_iHumanCooldown, 1);
+		g_esInvertCache[tank].g_iHumanRangeCooldown = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iHumanRangeCooldown, g_esInvertPlayer[tank].g_iHumanRangeCooldown, g_esInvertSpecial[iType].g_iHumanRangeCooldown, g_esInvertAbility[iType].g_iHumanRangeCooldown, 1);
+		g_esInvertCache[tank].g_iInvertAbility = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertAbility, g_esInvertPlayer[tank].g_iInvertAbility, g_esInvertSpecial[iType].g_iInvertAbility, g_esInvertAbility[iType].g_iInvertAbility, 1);
+		g_esInvertCache[tank].g_iInvertCooldown = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertCooldown, g_esInvertPlayer[tank].g_iInvertCooldown, g_esInvertSpecial[iType].g_iInvertCooldown, g_esInvertAbility[iType].g_iInvertCooldown, 1);
+		g_esInvertCache[tank].g_iInvertEffect = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertEffect, g_esInvertPlayer[tank].g_iInvertEffect, g_esInvertSpecial[iType].g_iInvertEffect, g_esInvertAbility[iType].g_iInvertEffect, 1);
+		g_esInvertCache[tank].g_iInvertHit = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertHit, g_esInvertPlayer[tank].g_iInvertHit, g_esInvertSpecial[iType].g_iInvertHit, g_esInvertAbility[iType].g_iInvertHit, 1);
+		g_esInvertCache[tank].g_iInvertHitMode = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertHitMode, g_esInvertPlayer[tank].g_iInvertHitMode, g_esInvertSpecial[iType].g_iInvertHitMode, g_esInvertAbility[iType].g_iInvertHitMode, 1);
+		g_esInvertCache[tank].g_iInvertMessage = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertMessage, g_esInvertPlayer[tank].g_iInvertMessage, g_esInvertSpecial[iType].g_iInvertMessage, g_esInvertAbility[iType].g_iInvertMessage, 1);
+		g_esInvertCache[tank].g_iInvertRangeCooldown = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertRangeCooldown, g_esInvertPlayer[tank].g_iInvertRangeCooldown, g_esInvertSpecial[iType].g_iInvertRangeCooldown, g_esInvertAbility[iType].g_iInvertRangeCooldown, 1);
+		g_esInvertCache[tank].g_iInvertSight = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iInvertSight, g_esInvertPlayer[tank].g_iInvertSight, g_esInvertSpecial[iType].g_iInvertSight, g_esInvertAbility[iType].g_iInvertSight, 1);
+		g_esInvertCache[tank].g_flOpenAreasOnly = flGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_flOpenAreasOnly, g_esInvertPlayer[tank].g_flOpenAreasOnly, g_esInvertSpecial[iType].g_flOpenAreasOnly, g_esInvertAbility[iType].g_flOpenAreasOnly, 1);
+		g_esInvertCache[tank].g_iRequiresHumans = iGetSubSettingValue(apply, bHuman, g_esInvertTeammate[tank].g_iRequiresHumans, g_esInvertPlayer[tank].g_iRequiresHumans, g_esInvertSpecial[iType].g_iRequiresHumans, g_esInvertAbility[iType].g_iRequiresHumans, 1);
+	}
+	else
+	{
+		g_esInvertCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flCloseAreasOnly, g_esInvertAbility[iType].g_flCloseAreasOnly, 1);
+		g_esInvertCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iComboAbility, g_esInvertAbility[iType].g_iComboAbility, 1);
+		g_esInvertCache[tank].g_flInvertChance = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertChance, g_esInvertAbility[iType].g_flInvertChance, 1);
+		g_esInvertCache[tank].g_flInvertDuration = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertDuration, g_esInvertAbility[iType].g_flInvertDuration, 1);
+		g_esInvertCache[tank].g_flInvertRange = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertRange, g_esInvertAbility[iType].g_flInvertRange, 1);
+		g_esInvertCache[tank].g_flInvertRangeChance = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flInvertRangeChance, g_esInvertAbility[iType].g_flInvertRangeChance, 1);
+		g_esInvertCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanAbility, g_esInvertAbility[iType].g_iHumanAbility, 1);
+		g_esInvertCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanAmmo, g_esInvertAbility[iType].g_iHumanAmmo, 1);
+		g_esInvertCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanCooldown, g_esInvertAbility[iType].g_iHumanCooldown, 1);
+		g_esInvertCache[tank].g_iHumanRangeCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iHumanRangeCooldown, g_esInvertAbility[iType].g_iHumanRangeCooldown, 1);
+		g_esInvertCache[tank].g_iInvertAbility = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertAbility, g_esInvertAbility[iType].g_iInvertAbility, 1);
+		g_esInvertCache[tank].g_iInvertCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertCooldown, g_esInvertAbility[iType].g_iInvertCooldown, 1);
+		g_esInvertCache[tank].g_iInvertEffect = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertEffect, g_esInvertAbility[iType].g_iInvertEffect, 1);
+		g_esInvertCache[tank].g_iInvertHit = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertHit, g_esInvertAbility[iType].g_iInvertHit, 1);
+		g_esInvertCache[tank].g_iInvertHitMode = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertHitMode, g_esInvertAbility[iType].g_iInvertHitMode, 1);
+		g_esInvertCache[tank].g_iInvertMessage = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertMessage, g_esInvertAbility[iType].g_iInvertMessage, 1);
+		g_esInvertCache[tank].g_iInvertRangeCooldown = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertRangeCooldown, g_esInvertAbility[iType].g_iInvertRangeCooldown, 1);
+		g_esInvertCache[tank].g_iInvertSight = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iInvertSight, g_esInvertAbility[iType].g_iInvertSight, 1);
+		g_esInvertCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_flOpenAreasOnly, g_esInvertAbility[iType].g_flOpenAreasOnly, 1);
+		g_esInvertCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esInvertPlayer[tank].g_iRequiresHumans, g_esInvertAbility[iType].g_iRequiresHumans, 1);
+	}
 }
 
 #if defined MT_ABILITIES_MAIN
@@ -721,17 +903,21 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 	{
 		int iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId),
 			iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId);
-		if (bIsValidClient(iBot) && bIsTank(iTank))
+		if (bIsValidClient(iBot) && bIsInfected(iTank))
 		{
 			vInvertCopyStats2(iBot, iTank);
 			vRemoveInvert(iBot);
 		}
 	}
+	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
+	{
+		vInvertReset();
+	}
 	else if (StrEqual(name, "player_bot_replace"))
 	{
 		int iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId),
 			iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId);
-		if (bIsValidClient(iTank) && bIsTank(iBot))
+		if (bIsValidClient(iTank) && bIsInfected(iBot))
 		{
 			vInvertCopyStats2(iTank, iBot);
 			vRemoveInvert(iTank);
@@ -745,9 +931,15 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 			vRemoveInvert(iTank);
 		}
 	}
-	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
+	else if (StrEqual(name, "player_now_it"))
 	{
-		vInvertReset();
+		bool bExploded = event.GetBool("exploded");
+		int iSurvivorId = event.GetInt("userid"), iSurvivor = GetClientOfUserId(iSurvivorId),
+			iBoomerId = event.GetInt("attacker"), iBoomer = GetClientOfUserId(iBoomerId);
+		if (bIsBoomer(iBoomer) && bIsSurvivor(iSurvivor) && !bExploded)
+		{
+			vInvertHit(iSurvivor, iBoomer, GetRandomFloat(0.1, 100.0), g_esInvertCache[iBoomer].g_flInvertChance, g_esInvertCache[iBoomer].g_iInvertHit, MT_MESSAGE_RANGE, MT_ATTACK_RANGE);
+		}
 	}
 }
 
@@ -757,12 +949,12 @@ void vInvertAbilityActivated(int tank)
 public void MT_OnAbilityActivated(int tank)
 #endif
 {
-	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)) || g_esInvertCache[tank].g_iHumanAbility == 0))
+	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)) || g_esInvertCache[tank].g_iHumanAbility == 0))
 	{
 		return;
 	}
 
-	if (MT_IsTankSupported(tank) && (!bIsTank(tank, MT_CHECK_FAKECLIENT) || g_esInvertCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esInvertCache[tank].g_iInvertAbility == 1 && g_esInvertCache[tank].g_iComboAbility == 0)
+	if (MT_IsTankSupported(tank) && (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || g_esInvertCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esInvertCache[tank].g_iInvertAbility == 1 && g_esInvertCache[tank].g_iComboAbility == 0)
 	{
 		vInvertAbility(tank, GetRandomFloat(0.1, 100.0));
 	}
@@ -776,7 +968,7 @@ public void MT_OnButtonPressed(int tank, int button)
 {
 	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE|MT_CHECK_FAKECLIENT) && MT_IsCustomTankSupported(tank))
 	{
-		if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)))
+		if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType, tank) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)))
 		{
 			return;
 		}
@@ -785,7 +977,7 @@ public void MT_OnButtonPressed(int tank, int button)
 		{
 			int iTime = GetTime();
 
-			switch (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown < iTime)
+			switch (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown <= iTime)
 			{
 				case true: vInvertAbility(tank, GetRandomFloat(0.1, 100.0));
 				case false: MT_PrintToChat(tank, "%s %t", MT_TAG3, "InvertHuman3", (g_esInvertPlayer[tank].g_iRangeCooldown - iTime));
@@ -810,12 +1002,12 @@ public void MT_OnChangeType(int tank, int oldType, int newType, bool revert)
 
 void vInvertAbility(int tank, float random, int pos = -1)
 {
-	if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)))
+	if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType, tank) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)))
 	{
 		return;
 	}
 
-	if (!bIsTank(tank, MT_CHECK_FAKECLIENT) || (g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0))
+	if (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || (g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0))
 	{
 		g_esInvertPlayer[tank].g_bFailed = false;
 		g_esInvertPlayer[tank].g_bNoAmmo = false;
@@ -827,10 +1019,10 @@ void vInvertAbility(int tank, float random, int pos = -1)
 		int iSurvivorCount = 0;
 		for (int iSurvivor = 1; iSurvivor <= MaxClients; iSurvivor++)
 		{
-			if (bIsSurvivor(iSurvivor, MT_CHECK_INGAME|MT_CHECK_ALIVE) && !MT_IsAdminImmune(iSurvivor, tank) && !bIsAdminImmune(iSurvivor, g_esInvertPlayer[tank].g_iTankType, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iImmunityFlags, g_esInvertPlayer[iSurvivor].g_iImmunityFlags))
+			if (bIsSurvivor(iSurvivor, MT_CHECK_INGAME|MT_CHECK_ALIVE) && !MT_IsAdminImmune(iSurvivor, tank) && !bIsAdminImmune(iSurvivor, g_esInvertPlayer[tank].g_iTankType, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iImmunityFlags, g_esInvertPlayer[iSurvivor].g_iImmunityFlags))
 			{
 				GetClientAbsOrigin(iSurvivor, flSurvivorPos);
-				if (GetVectorDistance(flTankPos, flSurvivorPos) <= flRange)
+				if (GetVectorDistance(flTankPos, flSurvivorPos) <= flRange && bIsVisibleToPlayer(tank, iSurvivor, g_esInvertCache[tank].g_iInvertSight, .range = flRange))
 				{
 					vInvertHit(iSurvivor, tank, random, flChance, g_esInvertCache[tank].g_iInvertAbility, MT_MESSAGE_RANGE, MT_ATTACK_RANGE, pos);
 
@@ -841,13 +1033,13 @@ void vInvertAbility(int tank, float random, int pos = -1)
 
 		if (iSurvivorCount == 0)
 		{
-			if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
+			if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
 			{
 				MT_PrintToChat(tank, "%s %t", MT_TAG3, "InvertHuman4");
 			}
 		}
 	}
-	else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
+	else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
 	{
 		MT_PrintToChat(tank, "%s %t", MT_TAG3, "InvertAmmo");
 	}
@@ -855,30 +1047,35 @@ void vInvertAbility(int tank, float random, int pos = -1)
 
 void vInvertHit(int survivor, int tank, float random, float chance, int enabled, int messages, int flags, int pos = -1)
 {
-	if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)) || MT_IsAdminImmune(survivor, tank) || bIsAdminImmune(survivor, g_esInvertPlayer[tank].g_iTankType, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankType].g_iImmunityFlags, g_esInvertPlayer[survivor].g_iImmunityFlags))
+	if (bIsAreaNarrow(tank, g_esInvertCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esInvertCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esInvertPlayer[tank].g_iTankType, tank) || (g_esInvertCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esInvertCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[tank].g_iAccessFlags)) || MT_IsAdminImmune(survivor, tank) || bIsAdminImmune(survivor, g_esInvertPlayer[tank].g_iTankType, g_esInvertAbility[g_esInvertPlayer[tank].g_iTankTypeRecorded].g_iImmunityFlags, g_esInvertPlayer[survivor].g_iImmunityFlags))
 	{
 		return;
 	}
 
 	int iTime = GetTime();
-	if (((flags & MT_ATTACK_RANGE) && g_esInvertPlayer[tank].g_iRangeCooldown != -1 && g_esInvertPlayer[tank].g_iRangeCooldown > iTime) || (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && g_esInvertPlayer[tank].g_iCooldown != -1 && g_esInvertPlayer[tank].g_iCooldown > iTime))
+	if (((flags & MT_ATTACK_RANGE) && g_esInvertPlayer[tank].g_iRangeCooldown != -1 && g_esInvertPlayer[tank].g_iRangeCooldown >= iTime) || (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && g_esInvertPlayer[tank].g_iCooldown != -1 && g_esInvertPlayer[tank].g_iCooldown >= iTime))
 	{
 		return;
 	}
 
 	if (enabled == 1 && bIsSurvivor(survivor))
 	{
-		if (!bIsTank(tank, MT_CHECK_FAKECLIENT) || (flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE) || (g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0))
+		if (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || (flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE) || (g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0))
 		{
 			if (random <= chance && !g_esInvertPlayer[survivor].g_bAffected)
 			{
+				if ((messages & MT_MESSAGE_MELEE) && !bIsVisibleToPlayer(tank, survivor, g_esInvertCache[tank].g_iInvertSight, .range = 100.0))
+				{
+					return;
+				}
+
 				g_esInvertPlayer[survivor].g_bAffected = true;
 				g_esInvertPlayer[survivor].g_iOwner = tank;
 
 				int iCooldown = -1;
-				if ((flags & MT_ATTACK_RANGE) && (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown < iTime))
+				if ((flags & MT_ATTACK_RANGE) && (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown <= iTime))
 				{
-					if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
+					if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1)
 					{
 						g_esInvertPlayer[tank].g_iAmmoCount++;
 
@@ -886,44 +1083,47 @@ void vInvertHit(int survivor, int tank, float random, float chance, int enabled,
 					}
 
 					iCooldown = (pos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 11, pos)) : g_esInvertCache[tank].g_iInvertRangeCooldown;
-					iCooldown = (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0) ? g_esInvertCache[tank].g_iHumanRangeCooldown : iCooldown;
+					iCooldown = (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && g_esInvertPlayer[tank].g_iAmmoCount < g_esInvertCache[tank].g_iHumanAmmo && g_esInvertCache[tank].g_iHumanAmmo > 0) ? g_esInvertCache[tank].g_iHumanRangeCooldown : iCooldown;
 					g_esInvertPlayer[tank].g_iRangeCooldown = (iTime + iCooldown);
-					if (g_esInvertPlayer[tank].g_iRangeCooldown != -1 && g_esInvertPlayer[tank].g_iRangeCooldown > iTime)
+					if (g_esInvertPlayer[tank].g_iRangeCooldown != -1 && g_esInvertPlayer[tank].g_iRangeCooldown >= iTime)
 					{
 						MT_PrintToChat(tank, "%s %t", MT_TAG3, "InvertHuman5", (g_esInvertPlayer[tank].g_iRangeCooldown - iTime));
 					}
 				}
-				else if (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && (g_esInvertPlayer[tank].g_iCooldown == -1 || g_esInvertPlayer[tank].g_iCooldown < iTime))
+				else if (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && (g_esInvertPlayer[tank].g_iCooldown == -1 || g_esInvertPlayer[tank].g_iCooldown <= iTime))
 				{
 					iCooldown = (pos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 2, pos)) : g_esInvertCache[tank].g_iInvertCooldown;
-					iCooldown = (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1) ? g_esInvertCache[tank].g_iHumanCooldown : iCooldown;
+					iCooldown = (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1) ? g_esInvertCache[tank].g_iHumanCooldown : iCooldown;
 					g_esInvertPlayer[tank].g_iCooldown = (iTime + iCooldown);
-					if (g_esInvertPlayer[tank].g_iCooldown != -1 && g_esInvertPlayer[tank].g_iCooldown > iTime)
+					if (g_esInvertPlayer[tank].g_iCooldown != -1 && g_esInvertPlayer[tank].g_iCooldown >= iTime)
 					{
 						MT_PrintToChat(tank, "%s %t", MT_TAG3, "InvertHuman5", (g_esInvertPlayer[tank].g_iCooldown - iTime));
 					}
 				}
 
 				float flDuration = (pos != -1) ? MT_GetCombinationSetting(tank, 5, pos) : g_esInvertCache[tank].g_flInvertDuration;
-				DataPack dpStopInvert;
-				CreateDataTimer(flDuration, tTimerStopInvert, dpStopInvert, TIMER_FLAG_NO_MAPCHANGE);
-				dpStopInvert.WriteCell(GetClientUserId(survivor));
-				dpStopInvert.WriteCell(GetClientUserId(tank));
-				dpStopInvert.WriteCell(messages);
+				if (flDuration > 0.0)
+				{
+					DataPack dpStopInvert;
+					CreateDataTimer(flDuration, tTimerStopInvert, dpStopInvert, TIMER_FLAG_NO_MAPCHANGE);
+					dpStopInvert.WriteCell(GetClientUserId(survivor));
+					dpStopInvert.WriteCell(GetClientUserId(tank));
+					dpStopInvert.WriteCell(messages);
+				}
 
 				vScreenEffect(survivor, tank, g_esInvertCache[tank].g_iInvertEffect, flags);
 
 				if (g_esInvertCache[tank].g_iInvertMessage & messages)
 				{
-					char sTankName[33];
+					char sTankName[64];
 					MT_GetTankName(tank, sTankName);
 					MT_PrintToChatAll("%s %t", MT_TAG2, "Invert", sTankName, survivor);
 					MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Invert", LANG_SERVER, sTankName, survivor);
 				}
 			}
-			else if ((flags & MT_ATTACK_RANGE) && (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown < iTime))
+			else if ((flags & MT_ATTACK_RANGE) && (g_esInvertPlayer[tank].g_iRangeCooldown == -1 || g_esInvertPlayer[tank].g_iRangeCooldown <= iTime))
 			{
-				if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && !g_esInvertPlayer[tank].g_bFailed)
+				if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && !g_esInvertPlayer[tank].g_bFailed)
 				{
 					g_esInvertPlayer[tank].g_bFailed = true;
 
@@ -931,7 +1131,7 @@ void vInvertHit(int survivor, int tank, float random, float chance, int enabled,
 				}
 			}
 		}
-		else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && !g_esInvertPlayer[tank].g_bNoAmmo)
+		else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esInvertCache[tank].g_iHumanAbility == 1 && !g_esInvertPlayer[tank].g_bNoAmmo)
 		{
 			g_esInvertPlayer[tank].g_bNoAmmo = true;
 
@@ -954,7 +1154,7 @@ void vRemoveInvert(int tank)
 		if (bIsSurvivor(iSurvivor, MT_CHECK_INGAME) && g_esInvertPlayer[iSurvivor].g_bAffected && g_esInvertPlayer[iSurvivor].g_iOwner == tank)
 		{
 			g_esInvertPlayer[iSurvivor].g_bAffected = false;
-			g_esInvertPlayer[iSurvivor].g_iOwner = 0;
+			g_esInvertPlayer[iSurvivor].g_iOwner = -1;
 		}
 	}
 
@@ -969,7 +1169,7 @@ void vInvertReset()
 		{
 			vInvertReset2(iPlayer);
 
-			g_esInvertPlayer[iPlayer].g_iOwner = 0;
+			g_esInvertPlayer[iPlayer].g_iOwner = -1;
 		}
 	}
 }
@@ -989,7 +1189,7 @@ void tTimerInvertCombo(Handle timer, DataPack pack)
 	pack.Reset();
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esInvertAbility[g_esInvertPlayer[iTank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esInvertPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || g_esInvertCache[iTank].g_iInvertAbility == 0)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esInvertAbility[g_esInvertPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esInvertPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || g_esInvertCache[iTank].g_iInvertAbility == 0)
 	{
 		return;
 	}
@@ -1010,7 +1210,7 @@ void tTimerInvertCombo2(Handle timer, DataPack pack)
 	}
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esInvertAbility[g_esInvertPlayer[iTank].g_iTankType].g_iAccessFlags, g_esInvertPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esInvertPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || g_esInvertCache[iTank].g_iInvertHit == 0)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esInvertAbility[g_esInvertPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esInvertPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esInvertPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || g_esInvertCache[iTank].g_iInvertHit == 0)
 	{
 		return;
 	}
@@ -1019,7 +1219,7 @@ void tTimerInvertCombo2(Handle timer, DataPack pack)
 	int iPos = pack.ReadCell();
 	char sClassname[32];
 	pack.ReadString(sClassname, sizeof sClassname);
-	if ((g_esInvertCache[iTank].g_iInvertHitMode == 0 || g_esInvertCache[iTank].g_iInvertHitMode == 1) && (StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock")))
+	if ((g_esInvertCache[iTank].g_iInvertHitMode == 0 || g_esInvertCache[iTank].g_iInvertHitMode == 1) && (bIsSpecialInfected(iTank) || StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock")))
 	{
 		vInvertHit(iSurvivor, iTank, flRandom, flChance, g_esInvertCache[iTank].g_iInvertHit, MT_MESSAGE_MELEE, MT_ATTACK_CLAW, iPos);
 	}
@@ -1037,7 +1237,7 @@ void tTimerStopInvert(Handle timer, DataPack pack)
 	if (!bIsSurvivor(iSurvivor) || !g_esInvertPlayer[iSurvivor].g_bAffected)
 	{
 		g_esInvertPlayer[iSurvivor].g_bAffected = false;
-		g_esInvertPlayer[iSurvivor].g_iOwner = 0;
+		g_esInvertPlayer[iSurvivor].g_iOwner = -1;
 
 		return;
 	}
@@ -1046,13 +1246,13 @@ void tTimerStopInvert(Handle timer, DataPack pack)
 	if (!MT_IsTankSupported(iTank) || !MT_IsCustomTankSupported(iTank))
 	{
 		g_esInvertPlayer[iSurvivor].g_bAffected = false;
-		g_esInvertPlayer[iSurvivor].g_iOwner = 0;
+		g_esInvertPlayer[iSurvivor].g_iOwner = -1;
 
 		return;
 	}
 
 	g_esInvertPlayer[iSurvivor].g_bAffected = false;
-	g_esInvertPlayer[iSurvivor].g_iOwner = 0;
+	g_esInvertPlayer[iSurvivor].g_iOwner = -1;
 
 	int iMessage = pack.ReadCell();
 	if (g_esInvertCache[iTank].g_iInvertMessage & iMessage)

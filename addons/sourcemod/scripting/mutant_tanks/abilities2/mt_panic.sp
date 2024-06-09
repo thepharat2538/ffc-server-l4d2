@@ -1,6 +1,6 @@
 /**
  * Mutant Tanks: a L4D/L4D2 SourceMod Plugin
- * Copyright (C) 2023  Alfred "Psyk0tik" Llagas
+ * Copyright (C) 2024  Alfred "Psyk0tik" Llagas
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
@@ -84,9 +84,32 @@ enum struct esPanicPlayer
 	int g_iPanicMessage;
 	int g_iRequiresHumans;
 	int g_iTankType;
+	int g_iTankTypeRecorded;
 }
 
 esPanicPlayer g_esPanicPlayer[MAXPLAYERS + 1];
+
+enum struct esPanicTeammate
+{
+	float g_flCloseAreasOnly;
+	float g_flOpenAreasOnly;
+	float g_flPanicChance;
+	float g_flPanicInterval;
+
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanDuration;
+	int g_iHumanMode;
+	int g_iPanicAbility;
+	int g_iPanicCooldown;
+	int g_iPanicDuration;
+	int g_iPanicMessage;
+	int g_iRequiresHumans;
+}
+
+esPanicTeammate g_esPanicTeammate[MAXPLAYERS + 1];
 
 enum struct esPanicAbility
 {
@@ -111,6 +134,28 @@ enum struct esPanicAbility
 }
 
 esPanicAbility g_esPanicAbility[MT_MAXTYPES + 1];
+
+enum struct esPanicSpecial
+{
+	float g_flCloseAreasOnly;
+	float g_flOpenAreasOnly;
+	float g_flPanicChance;
+	float g_flPanicInterval;
+
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanDuration;
+	int g_iHumanMode;
+	int g_iPanicAbility;
+	int g_iPanicCooldown;
+	int g_iPanicDuration;
+	int g_iPanicMessage;
+	int g_iRequiresHumans;
+}
+
+esPanicSpecial g_esPanicSpecial[MT_MAXTYPES + 1];
 
 enum struct esPanicCache
 {
@@ -347,14 +392,14 @@ void vPanicCombineAbilities(int tank, int type, const float random, const char[]
 public void MT_OnCombineAbilities(int tank, int type, const float random, const char[] combo, int survivor, int weapon, const char[] classname)
 #endif
 {
-	if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility != 2)
+	if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility != 2)
 	{
-		g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iComboPosition = -1;
+		g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iComboPosition = -1;
 
 		return;
 	}
 
-	g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iComboPosition = -1;
+	g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iComboPosition = -1;
 
 	char sCombo[320], sSet[4][32];
 	FormatEx(sCombo, sizeof sCombo, ",%s,", combo);
@@ -375,7 +420,7 @@ public void MT_OnCombineAbilities(int tank, int type, const float random, const 
 			{
 				if (StrEqual(sSubset[iPos], MT_PANIC_SECTION, false) || StrEqual(sSubset[iPos], MT_PANIC_SECTION2, false) || StrEqual(sSubset[iPos], MT_PANIC_SECTION3, false) || StrEqual(sSubset[iPos], MT_PANIC_SECTION4, false))
 				{
-					g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iComboPosition = iPos;
+					g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iComboPosition = iPos;
 
 					if (random <= MT_GetCombinationSetting(tank, 1, iPos))
 					{
@@ -411,8 +456,7 @@ public void MT_OnConfigsLoad(int mode)
 	{
 		case 1:
 		{
-			int iMaxType = MT_GetMaxType();
-			for (int iIndex = MT_GetMinType(); iIndex <= iMaxType; iIndex++)
+			for (int iIndex = MT_GetMinType(); iIndex <= MT_GetMaxType(); iIndex++)
 			{
 				g_esPanicAbility[iIndex].g_iAccessFlags = 0;
 				g_esPanicAbility[iIndex].g_flCloseAreasOnly = 0.0;
@@ -431,80 +475,151 @@ public void MT_OnConfigsLoad(int mode)
 				g_esPanicAbility[iIndex].g_iPanicCooldown = 0;
 				g_esPanicAbility[iIndex].g_iPanicDuration = 0;
 				g_esPanicAbility[iIndex].g_flPanicInterval = 5.0;
+
+				g_esPanicSpecial[iIndex].g_flCloseAreasOnly = -1.0;
+				g_esPanicSpecial[iIndex].g_iComboAbility = -1;
+				g_esPanicSpecial[iIndex].g_iHumanAbility = -1;
+				g_esPanicSpecial[iIndex].g_iHumanAmmo = -1;
+				g_esPanicSpecial[iIndex].g_iHumanCooldown = -1;
+				g_esPanicSpecial[iIndex].g_iHumanDuration = -1;
+				g_esPanicSpecial[iIndex].g_iHumanMode = -1;
+				g_esPanicSpecial[iIndex].g_flOpenAreasOnly = -1.0;
+				g_esPanicSpecial[iIndex].g_iRequiresHumans = -1;
+				g_esPanicSpecial[iIndex].g_iPanicAbility = -1;
+				g_esPanicSpecial[iIndex].g_iPanicMessage = -1;
+				g_esPanicSpecial[iIndex].g_flPanicChance = -1.0;
+				g_esPanicSpecial[iIndex].g_iPanicCooldown = -1;
+				g_esPanicSpecial[iIndex].g_iPanicDuration = -1;
+				g_esPanicSpecial[iIndex].g_flPanicInterval = -1.0;
 			}
 		}
 		case 3:
 		{
 			for (int iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 			{
-				if (bIsValidClient(iPlayer))
-				{
-					g_esPanicPlayer[iPlayer].g_iAccessFlags = 0;
-					g_esPanicPlayer[iPlayer].g_flCloseAreasOnly = 0.0;
-					g_esPanicPlayer[iPlayer].g_iComboAbility = 0;
-					g_esPanicPlayer[iPlayer].g_iHumanAbility = 0;
-					g_esPanicPlayer[iPlayer].g_iHumanAmmo = 0;
-					g_esPanicPlayer[iPlayer].g_iHumanCooldown = 0;
-					g_esPanicPlayer[iPlayer].g_iHumanDuration = 0;
-					g_esPanicPlayer[iPlayer].g_iHumanMode = 0;
-					g_esPanicPlayer[iPlayer].g_flOpenAreasOnly = 0.0;
-					g_esPanicPlayer[iPlayer].g_iRequiresHumans = 0;
-					g_esPanicPlayer[iPlayer].g_iPanicAbility = 0;
-					g_esPanicPlayer[iPlayer].g_iPanicMessage = 0;
-					g_esPanicPlayer[iPlayer].g_flPanicChance = 0.0;
-					g_esPanicPlayer[iPlayer].g_iPanicCooldown = 0;
-					g_esPanicPlayer[iPlayer].g_iPanicDuration = 0;
-					g_esPanicPlayer[iPlayer].g_flPanicInterval = 0.0;
-				}
+				g_esPanicPlayer[iPlayer].g_iAccessFlags = -1;
+				g_esPanicPlayer[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esPanicPlayer[iPlayer].g_iComboAbility = -1;
+				g_esPanicPlayer[iPlayer].g_iHumanAbility = -1;
+				g_esPanicPlayer[iPlayer].g_iHumanAmmo = -1;
+				g_esPanicPlayer[iPlayer].g_iHumanCooldown = -1;
+				g_esPanicPlayer[iPlayer].g_iHumanDuration = -1;
+				g_esPanicPlayer[iPlayer].g_iHumanMode = -1;
+				g_esPanicPlayer[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esPanicPlayer[iPlayer].g_iRequiresHumans = -1;
+				g_esPanicPlayer[iPlayer].g_iPanicAbility = -1;
+				g_esPanicPlayer[iPlayer].g_iPanicMessage = -1;
+				g_esPanicPlayer[iPlayer].g_flPanicChance = -1.0;
+				g_esPanicPlayer[iPlayer].g_iPanicCooldown = -1;
+				g_esPanicPlayer[iPlayer].g_iPanicDuration = -1;
+				g_esPanicPlayer[iPlayer].g_flPanicInterval = -1.0;
+
+				g_esPanicTeammate[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esPanicTeammate[iPlayer].g_iComboAbility = -1;
+				g_esPanicTeammate[iPlayer].g_iHumanAbility = -1;
+				g_esPanicTeammate[iPlayer].g_iHumanAmmo = -1;
+				g_esPanicTeammate[iPlayer].g_iHumanCooldown = -1;
+				g_esPanicTeammate[iPlayer].g_iHumanDuration = -1;
+				g_esPanicTeammate[iPlayer].g_iHumanMode = -1;
+				g_esPanicTeammate[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esPanicTeammate[iPlayer].g_iRequiresHumans = -1;
+				g_esPanicTeammate[iPlayer].g_iPanicAbility = -1;
+				g_esPanicTeammate[iPlayer].g_iPanicMessage = -1;
+				g_esPanicTeammate[iPlayer].g_flPanicChance = -1.0;
+				g_esPanicTeammate[iPlayer].g_iPanicCooldown = -1;
+				g_esPanicTeammate[iPlayer].g_iPanicDuration = -1;
+				g_esPanicTeammate[iPlayer].g_flPanicInterval = -1.0;
 			}
 		}
 	}
 }
 
 #if defined MT_ABILITIES_MAIN2
-void vPanicConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+void vPanicConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #else
-public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #endif
 {
-	if (mode == 3 && bIsValidClient(admin))
+	if ((mode == -1 || mode == 3) && bIsValidClient(admin))
 	{
-		g_esPanicPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicPlayer[admin].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esPanicPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicPlayer[admin].g_iComboAbility, value, 0, 1);
-		g_esPanicPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicPlayer[admin].g_iHumanAbility, value, 0, 2);
-		g_esPanicPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicPlayer[admin].g_iHumanAmmo, value, 0, 99999);
-		g_esPanicPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicPlayer[admin].g_iHumanCooldown, value, 0, 99999);
-		g_esPanicPlayer[admin].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicPlayer[admin].g_iHumanDuration, value, 0, 99999);
-		g_esPanicPlayer[admin].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicPlayer[admin].g_iHumanMode, value, 0, 1);
-		g_esPanicPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicPlayer[admin].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esPanicPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicPlayer[admin].g_iRequiresHumans, value, 0, 32);
-		g_esPanicPlayer[admin].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicPlayer[admin].g_iPanicAbility, value, 0, 3);
-		g_esPanicPlayer[admin].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicPlayer[admin].g_iPanicMessage, value, 0, 1);
-		g_esPanicPlayer[admin].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicPlayer[admin].g_flPanicChance, value, 0.0, 100.0);
-		g_esPanicPlayer[admin].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicPlayer[admin].g_iPanicCooldown, value, 0, 99999);
-		g_esPanicPlayer[admin].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicPlayer[admin].g_iPanicDuration, value, 0, 99999);
-		g_esPanicPlayer[admin].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicPlayer[admin].g_flPanicInterval, value, 0.1, 99999.0);
-		g_esPanicPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esPanicTeammate[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicTeammate[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esPanicTeammate[admin].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicTeammate[admin].g_iComboAbility, value, -1, 1);
+			g_esPanicTeammate[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicTeammate[admin].g_iHumanAbility, value, -1, 2);
+			g_esPanicTeammate[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicTeammate[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esPanicTeammate[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicTeammate[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esPanicTeammate[admin].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicTeammate[admin].g_iHumanDuration, value, -1, 99999);
+			g_esPanicTeammate[admin].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicTeammate[admin].g_iHumanMode, value, -1, 1);
+			g_esPanicTeammate[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicTeammate[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esPanicTeammate[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicTeammate[admin].g_iRequiresHumans, value, -1, 32);
+			g_esPanicTeammate[admin].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicTeammate[admin].g_iPanicAbility, value, -1, 3);
+			g_esPanicTeammate[admin].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicTeammate[admin].g_iPanicMessage, value, -1, 1);
+			g_esPanicTeammate[admin].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicTeammate[admin].g_flPanicChance, value, -1.0, 100.0);
+			g_esPanicTeammate[admin].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicTeammate[admin].g_iPanicCooldown, value, -1, 99999);
+			g_esPanicTeammate[admin].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicTeammate[admin].g_iPanicDuration, value, -1, 99999);
+			g_esPanicTeammate[admin].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicTeammate[admin].g_flPanicInterval, value, -1.0, 99999.0);
+		}
+		else
+		{
+			g_esPanicPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicPlayer[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esPanicPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicPlayer[admin].g_iComboAbility, value, -1, 1);
+			g_esPanicPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicPlayer[admin].g_iHumanAbility, value, -1, 2);
+			g_esPanicPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicPlayer[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esPanicPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicPlayer[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esPanicPlayer[admin].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicPlayer[admin].g_iHumanDuration, value, -1, 99999);
+			g_esPanicPlayer[admin].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicPlayer[admin].g_iHumanMode, value, -1, 1);
+			g_esPanicPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicPlayer[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esPanicPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicPlayer[admin].g_iRequiresHumans, value, -1, 32);
+			g_esPanicPlayer[admin].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicPlayer[admin].g_iPanicAbility, value, -1, 3);
+			g_esPanicPlayer[admin].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicPlayer[admin].g_iPanicMessage, value, -1, 1);
+			g_esPanicPlayer[admin].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicPlayer[admin].g_flPanicChance, value, -1.0, 100.0);
+			g_esPanicPlayer[admin].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicPlayer[admin].g_iPanicCooldown, value, -1, 99999);
+			g_esPanicPlayer[admin].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicPlayer[admin].g_iPanicDuration, value, -1, 99999);
+			g_esPanicPlayer[admin].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicPlayer[admin].g_flPanicInterval, value, -1.0, 99999.0);
+			g_esPanicPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+		}
 	}
 
 	if (mode < 3 && type > 0)
 	{
-		g_esPanicAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicAbility[type].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esPanicAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicAbility[type].g_iComboAbility, value, 0, 1);
-		g_esPanicAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicAbility[type].g_iHumanAbility, value, 0, 2);
-		g_esPanicAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicAbility[type].g_iHumanAmmo, value, 0, 99999);
-		g_esPanicAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicAbility[type].g_iHumanCooldown, value, 0, 99999);
-		g_esPanicAbility[type].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicAbility[type].g_iHumanDuration, value, 0, 99999);
-		g_esPanicAbility[type].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicAbility[type].g_iHumanMode, value, 0, 1);
-		g_esPanicAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicAbility[type].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esPanicAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicAbility[type].g_iRequiresHumans, value, 0, 32);
-		g_esPanicAbility[type].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicAbility[type].g_iPanicAbility, value, 0, 3);
-		g_esPanicAbility[type].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicAbility[type].g_iPanicMessage, value, 0, 1);
-		g_esPanicAbility[type].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicAbility[type].g_flPanicChance, value, 0.0, 100.0);
-		g_esPanicAbility[type].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicAbility[type].g_iPanicCooldown, value, 0, 99999);
-		g_esPanicAbility[type].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicAbility[type].g_iPanicDuration, value, 0, 99999);
-		g_esPanicAbility[type].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicAbility[type].g_flPanicInterval, value, 0.1, 99999.0);
-		g_esPanicAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esPanicSpecial[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicSpecial[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esPanicSpecial[type].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicSpecial[type].g_iComboAbility, value, -1, 1);
+			g_esPanicSpecial[type].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicSpecial[type].g_iHumanAbility, value, -1, 2);
+			g_esPanicSpecial[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicSpecial[type].g_iHumanAmmo, value, -1, 99999);
+			g_esPanicSpecial[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicSpecial[type].g_iHumanCooldown, value, -1, 99999);
+			g_esPanicSpecial[type].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicSpecial[type].g_iHumanDuration, value, -1, 99999);
+			g_esPanicSpecial[type].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicSpecial[type].g_iHumanMode, value, -1, 1);
+			g_esPanicSpecial[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicSpecial[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esPanicSpecial[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicSpecial[type].g_iRequiresHumans, value, -1, 32);
+			g_esPanicSpecial[type].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicSpecial[type].g_iPanicAbility, value, -1, 3);
+			g_esPanicSpecial[type].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicSpecial[type].g_iPanicMessage, value, -1, 1);
+			g_esPanicSpecial[type].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicSpecial[type].g_flPanicChance, value, -1.0, 100.0);
+			g_esPanicSpecial[type].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicSpecial[type].g_iPanicCooldown, value, -1, 99999);
+			g_esPanicSpecial[type].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicSpecial[type].g_iPanicDuration, value, -1, 99999);
+			g_esPanicSpecial[type].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicSpecial[type].g_flPanicInterval, value, -1.0, 99999.0);
+		}
+		else
+		{
+			g_esPanicAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esPanicAbility[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esPanicAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esPanicAbility[type].g_iComboAbility, value, -1, 1);
+			g_esPanicAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esPanicAbility[type].g_iHumanAbility, value, -1, 2);
+			g_esPanicAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esPanicAbility[type].g_iHumanAmmo, value, -1, 99999);
+			g_esPanicAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esPanicAbility[type].g_iHumanCooldown, value, -1, 99999);
+			g_esPanicAbility[type].g_iHumanDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanDuration", "Human Duration", "Human_Duration", "hduration", g_esPanicAbility[type].g_iHumanDuration, value, -1, 99999);
+			g_esPanicAbility[type].g_iHumanMode = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "HumanMode", "Human Mode", "Human_Mode", "hmode", g_esPanicAbility[type].g_iHumanMode, value, -1, 1);
+			g_esPanicAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esPanicAbility[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esPanicAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esPanicAbility[type].g_iRequiresHumans, value, -1, 32);
+			g_esPanicAbility[type].g_iPanicAbility = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esPanicAbility[type].g_iPanicAbility, value, -1, 3);
+			g_esPanicAbility[type].g_iPanicMessage = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esPanicAbility[type].g_iPanicMessage, value, -1, 1);
+			g_esPanicAbility[type].g_flPanicChance = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicChance", "Panic Chance", "Panic_Chance", "chance", g_esPanicAbility[type].g_flPanicChance, value, -1.0, 100.0);
+			g_esPanicAbility[type].g_iPanicCooldown = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicCooldown", "Panic Cooldown", "Panic_Cooldown", "cooldown", g_esPanicAbility[type].g_iPanicCooldown, value, -1, 99999);
+			g_esPanicAbility[type].g_iPanicDuration = iGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicDuration", "Panic Duration", "Panic_Duration", "duration", g_esPanicAbility[type].g_iPanicDuration, value, -1, 99999);
+			g_esPanicAbility[type].g_flPanicInterval = flGetKeyValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "PanicInterval", "Panic Interval", "Panic_Interval", "interval", g_esPanicAbility[type].g_flPanicInterval, value, -1.0, 99999.0);
+			g_esPanicAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_PANIC_SECTION, MT_PANIC_SECTION2, MT_PANIC_SECTION3, MT_PANIC_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+		}
 	}
 }
 
@@ -514,23 +629,47 @@ void vPanicSettingsCached(int tank, bool apply, int type)
 public void MT_OnSettingsCached(int tank, bool apply, int type)
 #endif
 {
-	bool bHuman = bIsTank(tank, MT_CHECK_FAKECLIENT);
-	g_esPanicCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flCloseAreasOnly, g_esPanicAbility[type].g_flCloseAreasOnly);
-	g_esPanicCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iComboAbility, g_esPanicAbility[type].g_iComboAbility);
-	g_esPanicCache[tank].g_flPanicChance = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flPanicChance, g_esPanicAbility[type].g_flPanicChance);
-	g_esPanicCache[tank].g_flPanicInterval = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flPanicInterval, g_esPanicAbility[type].g_flPanicInterval);
-	g_esPanicCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanAbility, g_esPanicAbility[type].g_iHumanAbility);
-	g_esPanicCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanAmmo, g_esPanicAbility[type].g_iHumanAmmo);
-	g_esPanicCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanCooldown, g_esPanicAbility[type].g_iHumanCooldown);
-	g_esPanicCache[tank].g_iHumanDuration = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanDuration, g_esPanicAbility[type].g_iHumanDuration);
-	g_esPanicCache[tank].g_iHumanMode = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanMode, g_esPanicAbility[type].g_iHumanMode);
-	g_esPanicCache[tank].g_iPanicAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicAbility, g_esPanicAbility[type].g_iPanicAbility);
-	g_esPanicCache[tank].g_iPanicCooldown = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicCooldown, g_esPanicAbility[type].g_iPanicCooldown);
-	g_esPanicCache[tank].g_iPanicDuration = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicDuration, g_esPanicAbility[type].g_iPanicDuration);
-	g_esPanicCache[tank].g_iPanicMessage = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicMessage, g_esPanicAbility[type].g_iPanicMessage);
-	g_esPanicCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flOpenAreasOnly, g_esPanicAbility[type].g_flOpenAreasOnly);
-	g_esPanicCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iRequiresHumans, g_esPanicAbility[type].g_iRequiresHumans);
+	bool bHuman = bIsValidClient(tank, MT_CHECK_FAKECLIENT);
+	g_esPanicPlayer[tank].g_iTankTypeRecorded = apply ? MT_GetRecordedTankType(tank, type) : 0;
 	g_esPanicPlayer[tank].g_iTankType = apply ? type : 0;
+	int iType = g_esPanicPlayer[tank].g_iTankTypeRecorded;
+
+	if (bIsSpecialInfected(tank, MT_CHECK_INDEX|MT_CHECK_INGAME))
+	{
+		g_esPanicCache[tank].g_flCloseAreasOnly = flGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_flCloseAreasOnly, g_esPanicPlayer[tank].g_flCloseAreasOnly, g_esPanicSpecial[iType].g_flCloseAreasOnly, g_esPanicAbility[iType].g_flCloseAreasOnly, 1);
+		g_esPanicCache[tank].g_iComboAbility = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iComboAbility, g_esPanicPlayer[tank].g_iComboAbility, g_esPanicSpecial[iType].g_iComboAbility, g_esPanicAbility[iType].g_iComboAbility, 1);
+		g_esPanicCache[tank].g_flPanicChance = flGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_flPanicChance, g_esPanicPlayer[tank].g_flPanicChance, g_esPanicSpecial[iType].g_flPanicChance, g_esPanicAbility[iType].g_flPanicChance, 1);
+		g_esPanicCache[tank].g_flPanicInterval = flGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_flPanicInterval, g_esPanicPlayer[tank].g_flPanicInterval, g_esPanicSpecial[iType].g_flPanicInterval, g_esPanicAbility[iType].g_flPanicInterval, 1);
+		g_esPanicCache[tank].g_iHumanAbility = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iHumanAbility, g_esPanicPlayer[tank].g_iHumanAbility, g_esPanicSpecial[iType].g_iHumanAbility, g_esPanicAbility[iType].g_iHumanAbility, 1);
+		g_esPanicCache[tank].g_iHumanAmmo = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iHumanAmmo, g_esPanicPlayer[tank].g_iHumanAmmo, g_esPanicSpecial[iType].g_iHumanAmmo, g_esPanicAbility[iType].g_iHumanAmmo, 1);
+		g_esPanicCache[tank].g_iHumanCooldown = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iHumanCooldown, g_esPanicPlayer[tank].g_iHumanCooldown, g_esPanicSpecial[iType].g_iHumanCooldown, g_esPanicAbility[iType].g_iHumanCooldown, 1);
+		g_esPanicCache[tank].g_iHumanDuration = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iHumanDuration, g_esPanicPlayer[tank].g_iHumanDuration, g_esPanicSpecial[iType].g_iHumanDuration, g_esPanicAbility[iType].g_iHumanDuration, 1);
+		g_esPanicCache[tank].g_iHumanMode = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iHumanMode, g_esPanicPlayer[tank].g_iHumanMode, g_esPanicSpecial[iType].g_iHumanMode, g_esPanicAbility[iType].g_iHumanMode, 1);
+		g_esPanicCache[tank].g_iPanicAbility = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iPanicAbility, g_esPanicPlayer[tank].g_iPanicAbility, g_esPanicSpecial[iType].g_iPanicAbility, g_esPanicAbility[iType].g_iPanicAbility, 1);
+		g_esPanicCache[tank].g_iPanicCooldown = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iPanicCooldown, g_esPanicPlayer[tank].g_iPanicCooldown, g_esPanicSpecial[iType].g_iPanicCooldown, g_esPanicAbility[iType].g_iPanicCooldown, 1);
+		g_esPanicCache[tank].g_iPanicDuration = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iPanicDuration, g_esPanicPlayer[tank].g_iPanicDuration, g_esPanicSpecial[iType].g_iPanicDuration, g_esPanicAbility[iType].g_iPanicDuration, 1);
+		g_esPanicCache[tank].g_iPanicMessage = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iPanicMessage, g_esPanicPlayer[tank].g_iPanicMessage, g_esPanicSpecial[iType].g_iPanicMessage, g_esPanicAbility[iType].g_iPanicMessage, 1);
+		g_esPanicCache[tank].g_flOpenAreasOnly = flGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_flOpenAreasOnly, g_esPanicPlayer[tank].g_flOpenAreasOnly, g_esPanicSpecial[iType].g_flOpenAreasOnly, g_esPanicAbility[iType].g_flOpenAreasOnly, 1);
+		g_esPanicCache[tank].g_iRequiresHumans = iGetSubSettingValue(apply, bHuman, g_esPanicTeammate[tank].g_iRequiresHumans, g_esPanicPlayer[tank].g_iRequiresHumans, g_esPanicSpecial[iType].g_iRequiresHumans, g_esPanicAbility[iType].g_iRequiresHumans, 1);
+	}
+	else
+	{
+		g_esPanicCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flCloseAreasOnly, g_esPanicAbility[iType].g_flCloseAreasOnly, 1);
+		g_esPanicCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iComboAbility, g_esPanicAbility[iType].g_iComboAbility, 1);
+		g_esPanicCache[tank].g_flPanicChance = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flPanicChance, g_esPanicAbility[iType].g_flPanicChance, 1);
+		g_esPanicCache[tank].g_flPanicInterval = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flPanicInterval, g_esPanicAbility[iType].g_flPanicInterval, 1);
+		g_esPanicCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanAbility, g_esPanicAbility[iType].g_iHumanAbility, 1);
+		g_esPanicCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanAmmo, g_esPanicAbility[iType].g_iHumanAmmo, 1);
+		g_esPanicCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanCooldown, g_esPanicAbility[iType].g_iHumanCooldown, 1);
+		g_esPanicCache[tank].g_iHumanDuration = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanDuration, g_esPanicAbility[iType].g_iHumanDuration, 1);
+		g_esPanicCache[tank].g_iHumanMode = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iHumanMode, g_esPanicAbility[iType].g_iHumanMode, 1);
+		g_esPanicCache[tank].g_iPanicAbility = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicAbility, g_esPanicAbility[iType].g_iPanicAbility, 1);
+		g_esPanicCache[tank].g_iPanicCooldown = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicCooldown, g_esPanicAbility[iType].g_iPanicCooldown, 1);
+		g_esPanicCache[tank].g_iPanicDuration = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicDuration, g_esPanicAbility[iType].g_iPanicDuration, 1);
+		g_esPanicCache[tank].g_iPanicMessage = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iPanicMessage, g_esPanicAbility[iType].g_iPanicMessage, 1);
+		g_esPanicCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_flOpenAreasOnly, g_esPanicAbility[iType].g_flOpenAreasOnly, 1);
+		g_esPanicCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esPanicPlayer[tank].g_iRequiresHumans, g_esPanicAbility[iType].g_iRequiresHumans, 1);
+	}
 }
 
 #if defined MT_ABILITIES_MAIN2
@@ -564,17 +703,21 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 	{
 		int iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId),
 			iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId);
-		if (bIsValidClient(iBot) && bIsTank(iTank))
+		if (bIsValidClient(iBot) && bIsInfected(iTank))
 		{
 			vPanicCopyStats2(iBot, iTank);
 			vRemovePanic(iBot);
 		}
 	}
+	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
+	{
+		vPanicReset();
+	}
 	else if (StrEqual(name, "player_bot_replace"))
 	{
 		int iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId),
 			iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId);
-		if (bIsValidClient(iTank) && bIsTank(iBot))
+		if (bIsValidClient(iTank) && bIsInfected(iBot))
 		{
 			vPanicCopyStats2(iTank, iBot);
 			vRemovePanic(iTank);
@@ -589,10 +732,6 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 			vRemovePanic(iTank);
 		}
 	}
-	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
-	{
-		vPanicReset();
-	}
 }
 
 #if defined MT_ABILITIES_MAIN2
@@ -601,12 +740,12 @@ void vPanicAbilityActivated(int tank)
 public void MT_OnAbilityActivated(int tank)
 #endif
 {
-	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)) || g_esPanicCache[tank].g_iHumanAbility == 0))
+	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)) || g_esPanicCache[tank].g_iHumanAbility == 0))
 	{
 		return;
 	}
 
-	if (MT_IsTankSupported(tank) && (!bIsTank(tank, MT_CHECK_FAKECLIENT) || g_esPanicCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esPanicCache[tank].g_iPanicAbility == 1 && g_esPanicCache[tank].g_iComboAbility == 0 && !g_esPanicPlayer[tank].g_bActivated)
+	if (MT_IsTankSupported(tank) && (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || g_esPanicCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esPanicCache[tank].g_iPanicAbility == 1 && g_esPanicCache[tank].g_iComboAbility == 0 && !g_esPanicPlayer[tank].g_bActivated)
 	{
 		vPanicAbility(tank);
 	}
@@ -620,7 +759,7 @@ public void MT_OnButtonPressed(int tank, int button)
 {
 	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE|MT_CHECK_FAKECLIENT) && MT_IsCustomTankSupported(tank))
 	{
-		if (bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
+		if (bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType, tank) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
 		{
 			return;
 		}
@@ -628,7 +767,7 @@ public void MT_OnButtonPressed(int tank, int button)
 		if ((button & MT_MAIN_KEY) && g_esPanicCache[tank].g_iPanicAbility == 1 && g_esPanicCache[tank].g_iHumanAbility == 1)
 		{
 			int iTime = GetTime();
-			bool bRecharging = g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown > iTime;
+			bool bRecharging = g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown >= iTime;
 
 			switch (g_esPanicCache[tank].g_iHumanMode)
 			{
@@ -686,7 +825,7 @@ public void MT_OnButtonReleased(int tank, int button)
 {
 	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE|MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
 	{
-		if ((button & MT_MAIN_KEY) && g_esPanicCache[tank].g_iHumanMode == 1 && g_esPanicPlayer[tank].g_bActivated && (g_esPanicPlayer[tank].g_iCooldown == -1 || g_esPanicPlayer[tank].g_iCooldown < GetTime()))
+		if ((button & MT_MAIN_KEY) && g_esPanicCache[tank].g_iHumanMode == 1 && g_esPanicPlayer[tank].g_bActivated && (g_esPanicPlayer[tank].g_iCooldown == -1 || g_esPanicPlayer[tank].g_iCooldown <= GetTime()))
 		{
 			vPanicReset2(tank);
 		}
@@ -718,14 +857,14 @@ public void MT_OnPostTankSpawn(int tank)
 
 void vPanic(int tank, int pos = -1)
 {
-	if (g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown > GetTime())
+	if (g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown >= GetTime())
 	{
 		return;
 	}
 
 	g_esPanicPlayer[tank].g_bActivated = true;
 
-	if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
+	if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
 	{
 		g_esPanicPlayer[tank].g_iAmmoCount++;
 
@@ -736,7 +875,7 @@ void vPanic(int tank, int pos = -1)
 
 	if (g_esPanicCache[tank].g_iPanicMessage == 1)
 	{
-		char sTankName[33];
+		char sTankName[64];
 		MT_GetTankName(tank, sTankName);
 		MT_PrintToChatAll("%s %t", MT_TAG2, "Panic", sTankName);
 		MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Panic", LANG_SERVER, sTankName);
@@ -745,18 +884,21 @@ void vPanic(int tank, int pos = -1)
 
 void vPanic2(int tank, int pos = -1)
 {
-	if (bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
+	if (bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType, tank) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
 	{
 		return;
 	}
 
 	float flInterval = (pos != -1) ? MT_GetCombinationSetting(tank, 6, pos) : g_esPanicCache[tank].g_flPanicInterval;
-	DataPack dpPanic;
-	CreateDataTimer(flInterval, tTimerPanic, dpPanic, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
-	dpPanic.WriteCell(GetClientUserId(tank));
-	dpPanic.WriteCell(g_esPanicPlayer[tank].g_iTankType);
-	dpPanic.WriteCell(GetTime());
-	dpPanic.WriteCell(pos);
+	if (flInterval > 0.0)
+	{
+		DataPack dpPanic;
+		CreateDataTimer(flInterval, tTimerPanic, dpPanic, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+		dpPanic.WriteCell(GetClientUserId(tank));
+		dpPanic.WriteCell(g_esPanicPlayer[tank].g_iTankType);
+		dpPanic.WriteCell(GetTime());
+		dpPanic.WriteCell(pos);
+	}
 }
 
 void vPanic3(int tank)
@@ -779,23 +921,23 @@ void vPanic3(int tank)
 
 void vPanicAbility(int tank)
 {
-	if ((g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown > GetTime()) || bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
+	if ((g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown >= GetTime()) || bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType, tank) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)))
 	{
 		return;
 	}
 
-	if (!bIsTank(tank, MT_CHECK_FAKECLIENT) || (g_esPanicPlayer[tank].g_iAmmoCount < g_esPanicCache[tank].g_iHumanAmmo && g_esPanicCache[tank].g_iHumanAmmo > 0))
+	if (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || (g_esPanicPlayer[tank].g_iAmmoCount < g_esPanicCache[tank].g_iHumanAmmo && g_esPanicCache[tank].g_iHumanAmmo > 0))
 	{
 		if (GetRandomFloat(0.1, 100.0) <= g_esPanicCache[tank].g_flPanicChance)
 		{
 			vPanic(tank);
 		}
-		else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
+		else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
 		{
 			MT_PrintToChat(tank, "%s %t", MT_TAG3, "PanicHuman2");
 		}
 	}
-	else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
+	else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1)
 	{
 		MT_PrintToChat(tank, "%s %t", MT_TAG3, "PanicAmmo");
 	}
@@ -805,7 +947,7 @@ void vPanicRange(int tank, bool idle)
 {
 	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME) && MT_IsCustomTankSupported(tank) && g_esPanicCache[tank].g_iPanicAbility == 1 && GetRandomFloat(0.1, 100.0) <= g_esPanicCache[tank].g_flPanicChance)
 	{
-		if ((idle && MT_IsTankIdle(tank)) || bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (bIsTank(tank, MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)) || g_esPanicCache[tank].g_iHumanAbility == 0)))
+		if ((idle && MT_IsTankIdle(tank)) || bIsAreaNarrow(tank, g_esPanicCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esPanicCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[tank].g_iTankType, tank) || (g_esPanicCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[tank].g_iRequiresHumans) || (bIsInfected(tank, MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[tank].g_iAccessFlags)) || g_esPanicCache[tank].g_iHumanAbility == 0)))
 		{
 			return;
 		}
@@ -842,10 +984,10 @@ void vPanicReset2(int tank)
 {
 	g_esPanicPlayer[tank].g_bActivated = false;
 
-	int iTime = GetTime(), iPos = g_esPanicAbility[g_esPanicPlayer[tank].g_iTankType].g_iComboPosition, iCooldown = (iPos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 2, iPos)) : g_esPanicCache[tank].g_iPanicCooldown;
-	iCooldown = (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1 && g_esPanicPlayer[tank].g_iAmmoCount < g_esPanicCache[tank].g_iHumanAmmo && g_esPanicCache[tank].g_iHumanAmmo > 0) ? g_esPanicCache[tank].g_iHumanCooldown : iCooldown;
+	int iTime = GetTime(), iPos = g_esPanicAbility[g_esPanicPlayer[tank].g_iTankTypeRecorded].g_iComboPosition, iCooldown = (iPos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 2, iPos)) : g_esPanicCache[tank].g_iPanicCooldown;
+	iCooldown = (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esPanicCache[tank].g_iHumanAbility == 1 && g_esPanicPlayer[tank].g_iAmmoCount < g_esPanicCache[tank].g_iHumanAmmo && g_esPanicCache[tank].g_iHumanAmmo > 0) ? g_esPanicCache[tank].g_iHumanCooldown : iCooldown;
 	g_esPanicPlayer[tank].g_iCooldown = (iTime + iCooldown);
-	if (g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown > iTime)
+	if (g_esPanicPlayer[tank].g_iCooldown != -1 && g_esPanicPlayer[tank].g_iCooldown >= iTime)
 	{
 		MT_PrintToChat(tank, "%s %t", MT_TAG3, "PanicHuman5", (g_esPanicPlayer[tank].g_iCooldown - iTime));
 	}
@@ -856,7 +998,7 @@ void tTimerPanicCombo(Handle timer, DataPack pack)
 	pack.Reset();
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esPanicAbility[g_esPanicPlayer[iTank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esPanicPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || g_esPanicCache[iTank].g_iPanicAbility == 0 || g_esPanicPlayer[iTank].g_bActivated)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esPanicAbility[g_esPanicPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esPanicPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || g_esPanicCache[iTank].g_iPanicAbility == 0 || g_esPanicPlayer[iTank].g_bActivated)
 	{
 		return;
 	}
@@ -870,14 +1012,14 @@ Action tTimerPanic(Handle timer, DataPack pack)
 	pack.Reset();
 
 	int iTank = GetClientOfUserId(pack.ReadCell()), iType = pack.ReadCell();
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || bIsAreaNarrow(iTank, g_esPanicCache[iTank].g_flOpenAreasOnly) || bIsAreaWide(iTank, g_esPanicCache[iTank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[iTank].g_iTankType) || (g_esPanicCache[iTank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[iTank].g_iRequiresHumans) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esPanicAbility[g_esPanicPlayer[iTank].g_iTankType].g_iAccessFlags, g_esPanicPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esPanicPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || iType != g_esPanicPlayer[iTank].g_iTankType || g_esPanicCache[iTank].g_iPanicAbility == 0 || !g_esPanicPlayer[iTank].g_bActivated)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || bIsAreaNarrow(iTank, g_esPanicCache[iTank].g_flOpenAreasOnly) || bIsAreaWide(iTank, g_esPanicCache[iTank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esPanicPlayer[iTank].g_iTankType, iTank) || (g_esPanicCache[iTank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esPanicCache[iTank].g_iRequiresHumans) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esPanicAbility[g_esPanicPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esPanicPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esPanicPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || iType != g_esPanicPlayer[iTank].g_iTankType || g_esPanicCache[iTank].g_iPanicAbility == 0 || !g_esPanicPlayer[iTank].g_bActivated)
 	{
 		g_esPanicPlayer[iTank].g_bActivated = false;
 
 		return Plugin_Stop;
 	}
 
-	bool bHuman = bIsTank(iTank, MT_CHECK_FAKECLIENT);
+	bool bHuman = bIsInfected(iTank, MT_CHECK_FAKECLIENT);
 	int iTime = pack.ReadCell(), iCurrentTime = GetTime(), iPos = pack.ReadCell(),
 		iDuration = (iPos != -1) ? RoundToNearest(MT_GetCombinationSetting(iTank, 5, iPos)) : g_esPanicCache[iTank].g_iPanicDuration;
 	iDuration = (bHuman && g_esPanicCache[iTank].g_iHumanAbility == 1) ? g_esPanicCache[iTank].g_iHumanDuration : iDuration;
@@ -892,7 +1034,7 @@ Action tTimerPanic(Handle timer, DataPack pack)
 
 	if (g_esPanicCache[iTank].g_iPanicMessage == 1)
 	{
-		char sTankName[33];
+		char sTankName[64];
 		MT_GetTankName(iTank, sTankName);
 		MT_PrintToChatAll("%s %t", MT_TAG2, "Panic2", sTankName);
 		MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Panic2", LANG_SERVER, sTankName);

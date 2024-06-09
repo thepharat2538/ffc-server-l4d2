@@ -1,6 +1,6 @@
 /**
  * Mutant Tanks: a L4D/L4D2 SourceMod Plugin
- * Copyright (C) 2023  Alfred "Psyk0tik" Llagas
+ * Copyright (C) 2024  Alfred "Psyk0tik" Llagas
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
@@ -48,16 +48,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	return APLRes_Success;
 }
+
+#define PARTICLE_BASHED "screen_bashed"
+
+#define SOUND_GROAN1 "ambient/random_amb_sfx/metalscrapeverb08.wav"
+#define SOUND_GROAN2 "ambient/random_amb_sounds/randbridgegroan_03.wav" // Only available in L4D2
 #else
 	#if MT_BLIND_COMPILE_METHOD == 1
 		#error This file must be compiled as a standalone plugin.
 	#endif
 #endif
-
-#define PARTICLE_BASHED "screen_bashed"
-
-#define SOUND_GROAN2 "ambient/random_amb_sounds/randbridgegroan_03.wav" // Only available in L4D2
-#define SOUND_GROAN1 "ambient/random_amb_sfx/metalscrapeverb08.wav"
 
 #define MT_BLIND_SECTION "blindability"
 #define MT_BLIND_SECTION2 "blind ability"
@@ -90,6 +90,7 @@ enum struct esBlindPlayer
 	int g_iBlindMessage;
 	int g_iBlindMode;
 	int g_iBlindRangeCooldown;
+	int g_iBlindSight;
 	int g_iBlindStagger;
 	int g_iComboAbility;
 	int g_iCooldown;
@@ -102,9 +103,40 @@ enum struct esBlindPlayer
 	int g_iRangeCooldown;
 	int g_iRequiresHumans;
 	int g_iTankType;
+	int g_iTankTypeRecorded;
 }
 
 esBlindPlayer g_esBlindPlayer[MAXPLAYERS + 1];
+
+enum struct esBlindTeammate
+{
+	float g_flBlindChance;
+	float g_flBlindDuration;
+	float g_flBlindRange;
+	float g_flBlindRangeChance;
+	float g_flCloseAreasOnly;
+	float g_flOpenAreasOnly;
+
+	int g_iBlindAbility;
+	int g_iBlindCooldown;
+	int g_iBlindEffect;
+	int g_iBlindHit;
+	int g_iBlindHitMode;
+	int g_iBlindIntensity;
+	int g_iBlindMessage;
+	int g_iBlindMode;
+	int g_iBlindRangeCooldown;
+	int g_iBlindSight;
+	int g_iBlindStagger;
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanRangeCooldown;
+	int g_iRequiresHumans;
+}
+
+esBlindTeammate g_esBlindTeammate[MAXPLAYERS + 1];
 
 enum struct esBlindAbility
 {
@@ -125,6 +157,7 @@ enum struct esBlindAbility
 	int g_iBlindMessage;
 	int g_iBlindMode;
 	int g_iBlindRangeCooldown;
+	int g_iBlindSight;
 	int g_iBlindStagger;
 	int g_iComboAbility;
 	int g_iHumanAbility;
@@ -136,6 +169,36 @@ enum struct esBlindAbility
 }
 
 esBlindAbility g_esBlindAbility[MT_MAXTYPES + 1];
+
+enum struct esBlindSpecial
+{
+	float g_flBlindChance;
+	float g_flBlindDuration;
+	float g_flBlindRange;
+	float g_flBlindRangeChance;
+	float g_flCloseAreasOnly;
+	float g_flOpenAreasOnly;
+
+	int g_iBlindAbility;
+	int g_iBlindCooldown;
+	int g_iBlindEffect;
+	int g_iBlindHit;
+	int g_iBlindHitMode;
+	int g_iBlindIntensity;
+	int g_iBlindMessage;
+	int g_iBlindMode;
+	int g_iBlindRangeCooldown;
+	int g_iBlindSight;
+	int g_iBlindStagger;
+	int g_iComboAbility;
+	int g_iHumanAbility;
+	int g_iHumanAmmo;
+	int g_iHumanCooldown;
+	int g_iHumanRangeCooldown;
+	int g_iRequiresHumans;
+}
+
+esBlindSpecial g_esBlindSpecial[MT_MAXTYPES + 1];
 
 enum struct esBlindCache
 {
@@ -155,6 +218,7 @@ enum struct esBlindCache
 	int g_iBlindMessage;
 	int g_iBlindMode;
 	int g_iBlindRangeCooldown;
+	int g_iBlindSight;
 	int g_iBlindStagger;
 	int g_iComboAbility;
 	int g_iHumanAbility;
@@ -385,25 +449,30 @@ public void MT_OnMenuItemDisplayed(int client, const char[] info, char[] buffer,
 
 Action OnBlindTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	if (MT_IsCorePluginEnabled() && bIsValidClient(victim, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE) && bIsValidEntity(inflictor) && damage > 0.0)
+	if (MT_IsCorePluginEnabled() && bIsValidClient(victim, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE) && damage > 0.0)
 	{
 		char sClassname[32];
-		GetEntityClassname(inflictor, sClassname, sizeof sClassname);
+		if (bIsValidEntity(inflictor))
+		{
+			GetEntityClassname(inflictor, sClassname, sizeof sClassname);
+		}
+
 		if (MT_IsTankSupported(attacker) && MT_IsCustomTankSupported(attacker) && (g_esBlindCache[attacker].g_iBlindHitMode == 0 || g_esBlindCache[attacker].g_iBlindHitMode == 1) && bIsSurvivor(victim) && g_esBlindCache[attacker].g_iComboAbility == 0)
 		{
-			if ((!MT_HasAdminAccess(attacker) && !bHasAdminAccess(attacker, g_esBlindAbility[g_esBlindPlayer[attacker].g_iTankType].g_iAccessFlags, g_esBlindPlayer[attacker].g_iAccessFlags)) || MT_IsAdminImmune(victim, attacker) || bIsAdminImmune(victim, g_esBlindPlayer[attacker].g_iTankType, g_esBlindAbility[g_esBlindPlayer[attacker].g_iTankType].g_iImmunityFlags, g_esBlindPlayer[victim].g_iImmunityFlags))
+			if ((!MT_HasAdminAccess(attacker) && !bHasAdminAccess(attacker, g_esBlindAbility[g_esBlindPlayer[attacker].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[attacker].g_iAccessFlags)) || MT_IsAdminImmune(victim, attacker) || bIsAdminImmune(victim, g_esBlindPlayer[attacker].g_iTankType, g_esBlindAbility[g_esBlindPlayer[attacker].g_iTankTypeRecorded].g_iImmunityFlags, g_esBlindPlayer[victim].g_iImmunityFlags))
 			{
 				return Plugin_Continue;
 			}
 
-			if (StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock"))
+			bool bCaught = bIsSurvivorCaught(victim);
+			if ((bIsSpecialInfected(attacker) && (bCaught || (!bCaught && (damagetype & DMG_CLUB)) || (bIsSpitter(attacker) && StrEqual(sClassname, "insect_swarm")))) || StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock"))
 			{
 				vBlindHit(victim, attacker, GetRandomFloat(0.1, 100.0), g_esBlindCache[attacker].g_flBlindChance, g_esBlindCache[attacker].g_iBlindHit, MT_MESSAGE_MELEE, MT_ATTACK_CLAW);
 			}
 		}
 		else if (MT_IsTankSupported(victim) && MT_IsCustomTankSupported(victim) && (g_esBlindCache[victim].g_iBlindHitMode == 0 || g_esBlindCache[victim].g_iBlindHitMode == 2) && bIsSurvivor(attacker) && g_esBlindCache[victim].g_iComboAbility == 0)
 		{
-			if ((!MT_HasAdminAccess(victim) && !bHasAdminAccess(victim, g_esBlindAbility[g_esBlindPlayer[victim].g_iTankType].g_iAccessFlags, g_esBlindPlayer[victim].g_iAccessFlags)) || MT_IsAdminImmune(attacker, victim) || bIsAdminImmune(attacker, g_esBlindPlayer[victim].g_iTankType, g_esBlindAbility[g_esBlindPlayer[victim].g_iTankType].g_iImmunityFlags, g_esBlindPlayer[attacker].g_iImmunityFlags))
+			if ((!MT_HasAdminAccess(victim) && !bHasAdminAccess(victim, g_esBlindAbility[g_esBlindPlayer[victim].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[victim].g_iAccessFlags)) || MT_IsAdminImmune(attacker, victim) || bIsAdminImmune(attacker, g_esBlindPlayer[victim].g_iTankType, g_esBlindAbility[g_esBlindPlayer[victim].g_iTankTypeRecorded].g_iImmunityFlags, g_esBlindPlayer[attacker].g_iImmunityFlags))
 			{
 				return Plugin_Continue;
 			}
@@ -445,7 +514,7 @@ void vBlindCombineAbilities(int tank, int type, const float random, const char[]
 public void MT_OnCombineAbilities(int tank, int type, const float random, const char[] combo, int survivor, int weapon, const char[] classname)
 #endif
 {
-	if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility != 2)
+	if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility != 2)
 	{
 		return;
 	}
@@ -537,8 +606,7 @@ public void MT_OnConfigsLoad(int mode)
 	{
 		case 1:
 		{
-			int iMaxType = MT_GetMaxType();
-			for (int iIndex = MT_GetMinType(); iIndex <= iMaxType; iIndex++)
+			for (int iIndex = MT_GetMinType(); iIndex <= MT_GetMaxType(); iIndex++)
 			{
 				g_esBlindAbility[iIndex].g_iAccessFlags = 0;
 				g_esBlindAbility[iIndex].g_iImmunityFlags = 0;
@@ -563,105 +631,212 @@ public void MT_OnConfigsLoad(int mode)
 				g_esBlindAbility[iIndex].g_flBlindRange = 150.0;
 				g_esBlindAbility[iIndex].g_flBlindRangeChance = 15.0;
 				g_esBlindAbility[iIndex].g_iBlindRangeCooldown = 0;
+				g_esBlindAbility[iIndex].g_iBlindSight = 0;
 				g_esBlindAbility[iIndex].g_iBlindStagger = 3;
+
+				g_esBlindSpecial[iIndex].g_flCloseAreasOnly = -1.0;
+				g_esBlindSpecial[iIndex].g_iComboAbility = -1;
+				g_esBlindSpecial[iIndex].g_iHumanAbility = -1;
+				g_esBlindSpecial[iIndex].g_iHumanAmmo = -1;
+				g_esBlindSpecial[iIndex].g_iHumanCooldown = -1;
+				g_esBlindSpecial[iIndex].g_iHumanRangeCooldown = -1;
+				g_esBlindSpecial[iIndex].g_flOpenAreasOnly = -1.0;
+				g_esBlindSpecial[iIndex].g_iRequiresHumans = -1;
+				g_esBlindSpecial[iIndex].g_iBlindAbility = -1;
+				g_esBlindSpecial[iIndex].g_iBlindEffect = -1;
+				g_esBlindSpecial[iIndex].g_iBlindMessage = -1;
+				g_esBlindSpecial[iIndex].g_flBlindChance = -1.0;
+				g_esBlindSpecial[iIndex].g_iBlindCooldown = -1;
+				g_esBlindSpecial[iIndex].g_flBlindDuration = -1.0;
+				g_esBlindSpecial[iIndex].g_iBlindHit = -1;
+				g_esBlindSpecial[iIndex].g_iBlindHitMode = -1;
+				g_esBlindSpecial[iIndex].g_iBlindIntensity = -1;
+				g_esBlindSpecial[iIndex].g_iBlindMode = -1;
+				g_esBlindSpecial[iIndex].g_flBlindRange = -1.0;
+				g_esBlindSpecial[iIndex].g_flBlindRangeChance = -1.0;
+				g_esBlindSpecial[iIndex].g_iBlindRangeCooldown = -1;
+				g_esBlindSpecial[iIndex].g_iBlindSight = -1;
+				g_esBlindSpecial[iIndex].g_iBlindStagger = -1;
 			}
 		}
 		case 3:
 		{
 			for (int iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 			{
-				if (bIsValidClient(iPlayer))
-				{
-					g_esBlindPlayer[iPlayer].g_iAccessFlags = 0;
-					g_esBlindPlayer[iPlayer].g_iImmunityFlags = 0;
-					g_esBlindPlayer[iPlayer].g_flCloseAreasOnly = 0.0;
-					g_esBlindPlayer[iPlayer].g_iComboAbility = 0;
-					g_esBlindPlayer[iPlayer].g_iHumanAbility = 0;
-					g_esBlindPlayer[iPlayer].g_iHumanAmmo = 0;
-					g_esBlindPlayer[iPlayer].g_iHumanCooldown = 0;
-					g_esBlindPlayer[iPlayer].g_iHumanRangeCooldown = 0;
-					g_esBlindPlayer[iPlayer].g_flOpenAreasOnly = 0.0;
-					g_esBlindPlayer[iPlayer].g_iRequiresHumans = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindAbility = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindEffect = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindMessage = 0;
-					g_esBlindPlayer[iPlayer].g_flBlindChance = 0.0;
-					g_esBlindPlayer[iPlayer].g_iBlindCooldown = 0;
-					g_esBlindPlayer[iPlayer].g_flBlindDuration = 0.0;
-					g_esBlindPlayer[iPlayer].g_iBlindHit = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindHitMode = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindIntensity = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindMode = 0;
-					g_esBlindPlayer[iPlayer].g_flBlindRange = 0.0;
-					g_esBlindPlayer[iPlayer].g_flBlindRangeChance = 0.0;
-					g_esBlindPlayer[iPlayer].g_iBlindRangeCooldown = 0;
-					g_esBlindPlayer[iPlayer].g_iBlindStagger = 0;
-				}
+				g_esBlindPlayer[iPlayer].g_iAccessFlags = -1;
+				g_esBlindPlayer[iPlayer].g_iImmunityFlags = -1;
+				g_esBlindPlayer[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esBlindPlayer[iPlayer].g_iComboAbility = -1;
+				g_esBlindPlayer[iPlayer].g_iHumanAbility = -1;
+				g_esBlindPlayer[iPlayer].g_iHumanAmmo = -1;
+				g_esBlindPlayer[iPlayer].g_iHumanCooldown = -1;
+				g_esBlindPlayer[iPlayer].g_iHumanRangeCooldown = -1;
+				g_esBlindPlayer[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esBlindPlayer[iPlayer].g_iRequiresHumans = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindAbility = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindEffect = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindMessage = -1;
+				g_esBlindPlayer[iPlayer].g_flBlindChance = -1.0;
+				g_esBlindPlayer[iPlayer].g_iBlindCooldown = -1;
+				g_esBlindPlayer[iPlayer].g_flBlindDuration = -1.0;
+				g_esBlindPlayer[iPlayer].g_iBlindHit = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindHitMode = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindIntensity = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindMode = -1;
+				g_esBlindPlayer[iPlayer].g_flBlindRange = -1.0;
+				g_esBlindPlayer[iPlayer].g_flBlindRangeChance = -1.0;
+				g_esBlindPlayer[iPlayer].g_iBlindRangeCooldown = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindSight = -1;
+				g_esBlindPlayer[iPlayer].g_iBlindStagger = -1;
+
+				g_esBlindTeammate[iPlayer].g_flCloseAreasOnly = -1.0;
+				g_esBlindTeammate[iPlayer].g_iComboAbility = -1;
+				g_esBlindTeammate[iPlayer].g_iHumanAbility = -1;
+				g_esBlindTeammate[iPlayer].g_iHumanAmmo = -1;
+				g_esBlindTeammate[iPlayer].g_iHumanCooldown = -1;
+				g_esBlindTeammate[iPlayer].g_iHumanRangeCooldown = -1;
+				g_esBlindTeammate[iPlayer].g_flOpenAreasOnly = -1.0;
+				g_esBlindTeammate[iPlayer].g_iRequiresHumans = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindAbility = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindEffect = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindMessage = -1;
+				g_esBlindTeammate[iPlayer].g_flBlindChance = -1.0;
+				g_esBlindTeammate[iPlayer].g_iBlindCooldown = -1;
+				g_esBlindTeammate[iPlayer].g_flBlindDuration = -1.0;
+				g_esBlindTeammate[iPlayer].g_iBlindHit = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindHitMode = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindIntensity = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindMode = -1;
+				g_esBlindTeammate[iPlayer].g_flBlindRange = -1.0;
+				g_esBlindTeammate[iPlayer].g_flBlindRangeChance = -1.0;
+				g_esBlindTeammate[iPlayer].g_iBlindRangeCooldown = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindSight = -1;
+				g_esBlindTeammate[iPlayer].g_iBlindStagger = -1;
 			}
 		}
 	}
 }
 
 #if defined MT_ABILITIES_MAIN
-void vBlindConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+void vBlindConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #else
-public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode)
+public void MT_OnConfigsLoaded(const char[] subsection, const char[] key, const char[] value, int type, int admin, int mode, bool special, const char[] specsection)
 #endif
 {
-	if (mode == 3 && bIsValidClient(admin))
+	if ((mode == -1 || mode == 3) && bIsValidClient(admin))
 	{
-		g_esBlindPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esBlindPlayer[admin].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esBlindPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindPlayer[admin].g_iComboAbility, value, 0, 1);
-		g_esBlindPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindPlayer[admin].g_iHumanAbility, value, 0, 2);
-		g_esBlindPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindPlayer[admin].g_iHumanAmmo, value, 0, 99999);
-		g_esBlindPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindPlayer[admin].g_iHumanCooldown, value, 0, 99999);
-		g_esBlindPlayer[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindPlayer[admin].g_iHumanRangeCooldown, value, 0, 99999);
-		g_esBlindPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindPlayer[admin].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esBlindPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindPlayer[admin].g_iRequiresHumans, value, 0, 32);
-		g_esBlindPlayer[admin].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindPlayer[admin].g_iBlindAbility, value, 0, 1);
-		g_esBlindPlayer[admin].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindPlayer[admin].g_iBlindEffect, value, 0, 7);
-		g_esBlindPlayer[admin].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindPlayer[admin].g_iBlindMessage, value, 0, 3);
-		g_esBlindPlayer[admin].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindPlayer[admin].g_flBlindChance, value, 0.0, 100.0);
-		g_esBlindPlayer[admin].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindPlayer[admin].g_iBlindCooldown, value, 0, 99999);
-		g_esBlindPlayer[admin].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindPlayer[admin].g_flBlindDuration, value, 0.1, 99999.0);
-		g_esBlindPlayer[admin].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindPlayer[admin].g_iBlindHit, value, 0, 1);
-		g_esBlindPlayer[admin].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindPlayer[admin].g_iBlindHitMode, value, 0, 2);
-		g_esBlindPlayer[admin].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindPlayer[admin].g_iBlindIntensity, value, 0, 255);
-		g_esBlindPlayer[admin].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindPlayer[admin].g_iBlindMode, value, 0, 1);
-		g_esBlindPlayer[admin].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindPlayer[admin].g_flBlindRange, value, 1.0, 99999.0);
-		g_esBlindPlayer[admin].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindPlayer[admin].g_flBlindRangeChance, value, 0.0, 100.0);
-		g_esBlindPlayer[admin].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindPlayer[admin].g_iBlindRangeCooldown, value, 0, 99999);
-		g_esBlindPlayer[admin].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindPlayer[admin].g_iBlindStagger, value, 0, 3);
-		g_esBlindPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
-		g_esBlindPlayer[admin].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esBlindTeammate[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esBlindTeammate[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esBlindTeammate[admin].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindTeammate[admin].g_iComboAbility, value, -1, 1);
+			g_esBlindTeammate[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindTeammate[admin].g_iHumanAbility, value, -1, 2);
+			g_esBlindTeammate[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindTeammate[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esBlindTeammate[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindTeammate[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esBlindTeammate[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindTeammate[admin].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esBlindTeammate[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindTeammate[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esBlindTeammate[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindTeammate[admin].g_iRequiresHumans, value, -1, 32);
+			g_esBlindTeammate[admin].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindTeammate[admin].g_iBlindAbility, value, -1, 1);
+			g_esBlindTeammate[admin].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindTeammate[admin].g_iBlindEffect, value, -1, 7);
+			g_esBlindTeammate[admin].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindTeammate[admin].g_iBlindMessage, value, -1, 3);
+			g_esBlindTeammate[admin].g_iBlindSight = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esBlindTeammate[admin].g_iBlindSight, value, -1, 5);
+			g_esBlindTeammate[admin].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindTeammate[admin].g_flBlindChance, value, -1.0, 100.0);
+			g_esBlindTeammate[admin].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindTeammate[admin].g_iBlindCooldown, value, -1, 99999);
+			g_esBlindTeammate[admin].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindTeammate[admin].g_flBlindDuration, value, -1.0, 99999.0);
+			g_esBlindTeammate[admin].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindTeammate[admin].g_iBlindHit, value, -1, 1);
+			g_esBlindTeammate[admin].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindTeammate[admin].g_iBlindHitMode, value, -1, 2);
+			g_esBlindTeammate[admin].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindTeammate[admin].g_iBlindIntensity, value, -1, 255);
+			g_esBlindTeammate[admin].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindTeammate[admin].g_iBlindMode, value, -1, 1);
+			g_esBlindTeammate[admin].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindTeammate[admin].g_flBlindRange, value, -1.0, 99999.0);
+			g_esBlindTeammate[admin].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindTeammate[admin].g_flBlindRangeChance, value, -1.0, 100.0);
+			g_esBlindTeammate[admin].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindTeammate[admin].g_iBlindRangeCooldown, value, -1, 99999);
+			g_esBlindTeammate[admin].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindTeammate[admin].g_iBlindStagger, value, -1, 3);
+		}
+		else
+		{
+			g_esBlindPlayer[admin].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "closeareas", g_esBlindPlayer[admin].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esBlindPlayer[admin].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindPlayer[admin].g_iComboAbility, value, -1, 1);
+			g_esBlindPlayer[admin].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindPlayer[admin].g_iHumanAbility, value, -1, 2);
+			g_esBlindPlayer[admin].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindPlayer[admin].g_iHumanAmmo, value, -1, 99999);
+			g_esBlindPlayer[admin].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindPlayer[admin].g_iHumanCooldown, value, -1, 99999);
+			g_esBlindPlayer[admin].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindPlayer[admin].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esBlindPlayer[admin].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindPlayer[admin].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esBlindPlayer[admin].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindPlayer[admin].g_iRequiresHumans, value, -1, 32);
+			g_esBlindPlayer[admin].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindPlayer[admin].g_iBlindAbility, value, -1, 1);
+			g_esBlindPlayer[admin].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindPlayer[admin].g_iBlindEffect, value, -1, 7);
+			g_esBlindPlayer[admin].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindPlayer[admin].g_iBlindMessage, value, -1, 3);
+			g_esBlindPlayer[admin].g_iBlindSight = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esBlindPlayer[admin].g_iBlindSight, value, -1, 5);
+			g_esBlindPlayer[admin].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindPlayer[admin].g_flBlindChance, value, -1.0, 100.0);
+			g_esBlindPlayer[admin].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindPlayer[admin].g_iBlindCooldown, value, -1, 99999);
+			g_esBlindPlayer[admin].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindPlayer[admin].g_flBlindDuration, value, -1.0, 99999.0);
+			g_esBlindPlayer[admin].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindPlayer[admin].g_iBlindHit, value, -1, 1);
+			g_esBlindPlayer[admin].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindPlayer[admin].g_iBlindHitMode, value, -1, 2);
+			g_esBlindPlayer[admin].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindPlayer[admin].g_iBlindIntensity, value, -1, 255);
+			g_esBlindPlayer[admin].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindPlayer[admin].g_iBlindMode, value, -1, 1);
+			g_esBlindPlayer[admin].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindPlayer[admin].g_flBlindRange, value, -1.0, 99999.0);
+			g_esBlindPlayer[admin].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindPlayer[admin].g_flBlindRangeChance, value, -1.0, 100.0);
+			g_esBlindPlayer[admin].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindPlayer[admin].g_iBlindRangeCooldown, value, -1, 99999);
+			g_esBlindPlayer[admin].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindPlayer[admin].g_iBlindStagger, value, -1, 3);
+			g_esBlindPlayer[admin].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+			g_esBlindPlayer[admin].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		}
 	}
 
 	if (mode < 3 && type > 0)
 	{
-		g_esBlindAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "openareas", g_esBlindAbility[type].g_flCloseAreasOnly, value, 0.0, 99999.0);
-		g_esBlindAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindAbility[type].g_iComboAbility, value, 0, 1);
-		g_esBlindAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindAbility[type].g_iHumanAbility, value, 0, 2);
-		g_esBlindAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindAbility[type].g_iHumanAmmo, value, 0, 99999);
-		g_esBlindAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindAbility[type].g_iHumanCooldown, value, 0, 99999);
-		g_esBlindAbility[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindAbility[type].g_iHumanRangeCooldown, value, 0, 99999);
-		g_esBlindAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindAbility[type].g_flOpenAreasOnly, value, 0.0, 99999.0);
-		g_esBlindAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindAbility[type].g_iRequiresHumans, value, 0, 32);
-		g_esBlindAbility[type].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindAbility[type].g_iBlindAbility, value, 0, 1);
-		g_esBlindAbility[type].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindAbility[type].g_iBlindEffect, value, 0, 7);
-		g_esBlindAbility[type].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindAbility[type].g_iBlindMessage, value, 0, 3);
-		g_esBlindAbility[type].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindAbility[type].g_flBlindChance, value, 0.0, 100.0);
-		g_esBlindAbility[type].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindAbility[type].g_iBlindCooldown, value, 0, 99999);
-		g_esBlindAbility[type].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindAbility[type].g_flBlindDuration, value, 0.1, 99999.0);
-		g_esBlindAbility[type].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindAbility[type].g_iBlindHit, value, 0, 1);
-		g_esBlindAbility[type].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindAbility[type].g_iBlindHitMode, value, 0, 2);
-		g_esBlindAbility[type].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindAbility[type].g_iBlindIntensity, value, 0, 255);
-		g_esBlindAbility[type].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindAbility[type].g_iBlindMode, value, 0, 1);
-		g_esBlindAbility[type].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindAbility[type].g_flBlindRange, value, 1.0, 99999.0);
-		g_esBlindAbility[type].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindAbility[type].g_flBlindRangeChance, value, 0.0, 100.0);
-		g_esBlindAbility[type].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindAbility[type].g_iBlindRangeCooldown, value, 0, 99999);
-		g_esBlindAbility[type].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindAbility[type].g_iBlindStagger, value, 0, 3);
-		g_esBlindAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
-		g_esBlindAbility[type].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		if (special && specsection[0] != '\0')
+		{
+			g_esBlindSpecial[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "openareas", g_esBlindSpecial[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esBlindSpecial[type].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindSpecial[type].g_iComboAbility, value, -1, 1);
+			g_esBlindSpecial[type].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindSpecial[type].g_iHumanAbility, value, -1, 2);
+			g_esBlindSpecial[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindSpecial[type].g_iHumanAmmo, value, -1, 99999);
+			g_esBlindSpecial[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindSpecial[type].g_iHumanCooldown, value, -1, 99999);
+			g_esBlindSpecial[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindSpecial[type].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esBlindSpecial[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindSpecial[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esBlindSpecial[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindSpecial[type].g_iRequiresHumans, value, -1, 32);
+			g_esBlindSpecial[type].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindSpecial[type].g_iBlindAbility, value, -1, 1);
+			g_esBlindSpecial[type].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindSpecial[type].g_iBlindEffect, value, -1, 7);
+			g_esBlindSpecial[type].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindSpecial[type].g_iBlindMessage, value, -1, 3);
+			g_esBlindSpecial[type].g_iBlindSight = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esBlindSpecial[type].g_iBlindSight, value, -1, 5);
+			g_esBlindSpecial[type].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindSpecial[type].g_flBlindChance, value, -1.0, 100.0);
+			g_esBlindSpecial[type].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindSpecial[type].g_iBlindCooldown, value, -1, 99999);
+			g_esBlindSpecial[type].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindSpecial[type].g_flBlindDuration, value, -1.0, 99999.0);
+			g_esBlindSpecial[type].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindSpecial[type].g_iBlindHit, value, -1, 1);
+			g_esBlindSpecial[type].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindSpecial[type].g_iBlindHitMode, value, -1, 2);
+			g_esBlindSpecial[type].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindSpecial[type].g_iBlindIntensity, value, -1, 255);
+			g_esBlindSpecial[type].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindSpecial[type].g_iBlindMode, value, -1, 1);
+			g_esBlindSpecial[type].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindSpecial[type].g_flBlindRange, value, -1.0, 99999.0);
+			g_esBlindSpecial[type].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindSpecial[type].g_flBlindRangeChance, value, -1.0, 100.0);
+			g_esBlindSpecial[type].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindSpecial[type].g_iBlindRangeCooldown, value, -1, 99999);
+			g_esBlindSpecial[type].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindSpecial[type].g_iBlindStagger, value, -1, 3);
+		}
+		else
+		{
+			g_esBlindAbility[type].g_flCloseAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "CloseAreasOnly", "Close Areas Only", "Close_Areas_Only", "openareas", g_esBlindAbility[type].g_flCloseAreasOnly, value, -1.0, 99999.0);
+			g_esBlindAbility[type].g_iComboAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ComboAbility", "Combo Ability", "Combo_Ability", "combo", g_esBlindAbility[type].g_iComboAbility, value, -1, 1);
+			g_esBlindAbility[type].g_iHumanAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAbility", "Human Ability", "Human_Ability", "human", g_esBlindAbility[type].g_iHumanAbility, value, -1, 2);
+			g_esBlindAbility[type].g_iHumanAmmo = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanAmmo", "Human Ammo", "Human_Ammo", "hammo", g_esBlindAbility[type].g_iHumanAmmo, value, -1, 99999);
+			g_esBlindAbility[type].g_iHumanCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanCooldown", "Human Cooldown", "Human_Cooldown", "hcooldown", g_esBlindAbility[type].g_iHumanCooldown, value, -1, 99999);
+			g_esBlindAbility[type].g_iHumanRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "HumanRangeCooldown", "Human Range Cooldown", "Human_Range_Cooldown", "hrangecooldown", g_esBlindAbility[type].g_iHumanRangeCooldown, value, -1, 99999);
+			g_esBlindAbility[type].g_flOpenAreasOnly = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "OpenAreasOnly", "Open Areas Only", "Open_Areas_Only", "openareas", g_esBlindAbility[type].g_flOpenAreasOnly, value, -1.0, 99999.0);
+			g_esBlindAbility[type].g_iRequiresHumans = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "RequiresHumans", "Requires Humans", "Requires_Humans", "hrequire", g_esBlindAbility[type].g_iRequiresHumans, value, -1, 32);
+			g_esBlindAbility[type].g_iBlindAbility = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEnabled", "Ability Enabled", "Ability_Enabled", "aenabled", g_esBlindAbility[type].g_iBlindAbility, value, -1, 1);
+			g_esBlindAbility[type].g_iBlindEffect = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityEffect", "Ability Effect", "Ability_Effect", "effect", g_esBlindAbility[type].g_iBlindEffect, value, -1, 7);
+			g_esBlindAbility[type].g_iBlindMessage = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilityMessage", "Ability Message", "Ability_Message", "message", g_esBlindAbility[type].g_iBlindMessage, value, -1, 3);
+			g_esBlindAbility[type].g_iBlindSight = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AbilitySight", "Ability Sight", "Ability_Sight", "sight", g_esBlindAbility[type].g_iBlindSight, value, -1, 5);
+			g_esBlindAbility[type].g_flBlindChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindChance", "Blind Chance", "Blind_Chance", "chance", g_esBlindAbility[type].g_flBlindChance, value, -1.0, 100.0);
+			g_esBlindAbility[type].g_iBlindCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindCooldown", "Blind Cooldown", "Blind_Cooldown", "cooldown", g_esBlindAbility[type].g_iBlindCooldown, value, -1, 99999);
+			g_esBlindAbility[type].g_flBlindDuration = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindDuration", "Blind Duration", "Blind_Duration", "duration", g_esBlindAbility[type].g_flBlindDuration, value, -1.0, 99999.0);
+			g_esBlindAbility[type].g_iBlindHit = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHit", "Blind Hit", "Blind_Hit", "hit", g_esBlindAbility[type].g_iBlindHit, value, -1, 1);
+			g_esBlindAbility[type].g_iBlindHitMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindHitMode", "Blind Hit Mode", "Blind_Hit_Mode", "hitmode", g_esBlindAbility[type].g_iBlindHitMode, value, -1, 2);
+			g_esBlindAbility[type].g_iBlindIntensity = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindIntensity", "Blind Intensity", "Blind_Intensity", "intensity", g_esBlindAbility[type].g_iBlindIntensity, value, -1, 255);
+			g_esBlindAbility[type].g_iBlindMode = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindMode", "Blind Mode", "Blind_Mode", "mode", g_esBlindAbility[type].g_iBlindMode, value, -1, 1);
+			g_esBlindAbility[type].g_flBlindRange = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRange", "Blind Range", "Blind_Range", "range", g_esBlindAbility[type].g_flBlindRange, value, -1.0, 99999.0);
+			g_esBlindAbility[type].g_flBlindRangeChance = flGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeChance", "Blind Range Chance", "Blind_Range_Chance", "rangechance", g_esBlindAbility[type].g_flBlindRangeChance, value, -1.0, 100.0);
+			g_esBlindAbility[type].g_iBlindRangeCooldown = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindRangeCooldown", "Blind Range Cooldown", "Blind_Range_Cooldown", "rangecooldown", g_esBlindAbility[type].g_iBlindRangeCooldown, value, -1, 99999);
+			g_esBlindAbility[type].g_iBlindStagger = iGetKeyValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "BlindStagger", "Blind Stagger", "Blind_Stagger", "stagger", g_esBlindAbility[type].g_iBlindStagger, value, -1, 3);
+			g_esBlindAbility[type].g_iAccessFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "AccessFlags", "Access Flags", "Access_Flags", "access", value);
+			g_esBlindAbility[type].g_iImmunityFlags = iGetAdminFlagsValue(subsection, MT_BLIND_SECTION, MT_BLIND_SECTION2, MT_BLIND_SECTION3, MT_BLIND_SECTION4, key, "ImmunityFlags", "Immunity Flags", "Immunity_Flags", "immunity", value);
+		}
 	}
 }
 
@@ -671,30 +846,63 @@ void vBlindSettingsCached(int tank, bool apply, int type)
 public void MT_OnSettingsCached(int tank, bool apply, int type)
 #endif
 {
-	bool bHuman = bIsTank(tank, MT_CHECK_FAKECLIENT);
-	g_esBlindCache[tank].g_flBlindChance = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindChance, g_esBlindAbility[type].g_flBlindChance);
-	g_esBlindCache[tank].g_flBlindDuration = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindDuration, g_esBlindAbility[type].g_flBlindDuration);
-	g_esBlindCache[tank].g_flBlindRange = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindRange, g_esBlindAbility[type].g_flBlindRange);
-	g_esBlindCache[tank].g_flBlindRangeChance = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindRangeChance, g_esBlindAbility[type].g_flBlindRangeChance);
-	g_esBlindCache[tank].g_iBlindAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindAbility, g_esBlindAbility[type].g_iBlindAbility);
-	g_esBlindCache[tank].g_iBlindCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindCooldown, g_esBlindAbility[type].g_iBlindCooldown);
-	g_esBlindCache[tank].g_iBlindEffect = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindEffect, g_esBlindAbility[type].g_iBlindEffect);
-	g_esBlindCache[tank].g_iBlindHit = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindHit, g_esBlindAbility[type].g_iBlindHit);
-	g_esBlindCache[tank].g_iBlindHitMode = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindHitMode, g_esBlindAbility[type].g_iBlindHitMode);
-	g_esBlindCache[tank].g_iBlindIntensity = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindIntensity, g_esBlindAbility[type].g_iBlindIntensity);
-	g_esBlindCache[tank].g_iBlindMessage = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindMessage, g_esBlindAbility[type].g_iBlindMessage);
-	g_esBlindCache[tank].g_iBlindMode = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindMode, g_esBlindAbility[type].g_iBlindMode);
-	g_esBlindCache[tank].g_iBlindRangeCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindRangeCooldown, g_esBlindAbility[type].g_iBlindRangeCooldown);
-	g_esBlindCache[tank].g_iBlindStagger = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindStagger, g_esBlindAbility[type].g_iBlindStagger);
-	g_esBlindCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flCloseAreasOnly, g_esBlindAbility[type].g_flCloseAreasOnly);
-	g_esBlindCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iComboAbility, g_esBlindAbility[type].g_iComboAbility);
-	g_esBlindCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanAbility, g_esBlindAbility[type].g_iHumanAbility);
-	g_esBlindCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanAmmo, g_esBlindAbility[type].g_iHumanAmmo);
-	g_esBlindCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanCooldown, g_esBlindAbility[type].g_iHumanCooldown);
-	g_esBlindCache[tank].g_iHumanRangeCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanRangeCooldown, g_esBlindAbility[type].g_iHumanRangeCooldown);
-	g_esBlindCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flOpenAreasOnly, g_esBlindAbility[type].g_flOpenAreasOnly);
-	g_esBlindCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iRequiresHumans, g_esBlindAbility[type].g_iRequiresHumans);
+	bool bHuman = bIsValidClient(tank, MT_CHECK_FAKECLIENT);
+	g_esBlindPlayer[tank].g_iTankTypeRecorded = apply ? MT_GetRecordedTankType(tank, type) : 0;
 	g_esBlindPlayer[tank].g_iTankType = apply ? type : 0;
+	int iType = g_esBlindPlayer[tank].g_iTankTypeRecorded;
+
+	if (bIsSpecialInfected(tank, MT_CHECK_INDEX|MT_CHECK_INGAME))
+	{
+		g_esBlindCache[tank].g_flBlindChance = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flBlindChance, g_esBlindPlayer[tank].g_flBlindChance, g_esBlindSpecial[iType].g_flBlindChance, g_esBlindAbility[iType].g_flBlindChance, 1);
+		g_esBlindCache[tank].g_flBlindDuration = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flBlindDuration, g_esBlindPlayer[tank].g_flBlindDuration, g_esBlindSpecial[iType].g_flBlindDuration, g_esBlindAbility[iType].g_flBlindDuration, 1);
+		g_esBlindCache[tank].g_flBlindRange = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flBlindRange, g_esBlindPlayer[tank].g_flBlindRange, g_esBlindSpecial[iType].g_flBlindRange, g_esBlindAbility[iType].g_flBlindRange, 1);
+		g_esBlindCache[tank].g_flBlindRangeChance = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flBlindRangeChance, g_esBlindPlayer[tank].g_flBlindRangeChance, g_esBlindSpecial[iType].g_flBlindRangeChance, g_esBlindAbility[iType].g_flBlindRangeChance, 1);
+		g_esBlindCache[tank].g_iBlindAbility = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindAbility, g_esBlindPlayer[tank].g_iBlindAbility, g_esBlindSpecial[iType].g_iBlindAbility, g_esBlindAbility[iType].g_iBlindAbility, 1);
+		g_esBlindCache[tank].g_iBlindCooldown = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindCooldown, g_esBlindPlayer[tank].g_iBlindCooldown, g_esBlindSpecial[iType].g_iBlindCooldown, g_esBlindAbility[iType].g_iBlindCooldown, 1);
+		g_esBlindCache[tank].g_iBlindEffect = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindEffect, g_esBlindPlayer[tank].g_iBlindEffect, g_esBlindSpecial[iType].g_iBlindEffect, g_esBlindAbility[iType].g_iBlindEffect, 1);
+		g_esBlindCache[tank].g_iBlindHit = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindHit, g_esBlindPlayer[tank].g_iBlindHit, g_esBlindSpecial[iType].g_iBlindHit, g_esBlindAbility[iType].g_iBlindHit, 1);
+		g_esBlindCache[tank].g_iBlindHitMode = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindHitMode, g_esBlindPlayer[tank].g_iBlindHitMode, g_esBlindSpecial[iType].g_iBlindHitMode, g_esBlindAbility[iType].g_iBlindHitMode, 1);
+		g_esBlindCache[tank].g_iBlindIntensity = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindIntensity, g_esBlindPlayer[tank].g_iBlindIntensity, g_esBlindSpecial[iType].g_iBlindIntensity, g_esBlindAbility[iType].g_iBlindIntensity, 1);
+		g_esBlindCache[tank].g_iBlindMessage = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindMessage, g_esBlindPlayer[tank].g_iBlindMessage, g_esBlindSpecial[iType].g_iBlindMessage, g_esBlindAbility[iType].g_iBlindMessage, 1);
+		g_esBlindCache[tank].g_iBlindMode = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindMode, g_esBlindPlayer[tank].g_iBlindMode, g_esBlindSpecial[iType].g_iBlindMode, g_esBlindAbility[iType].g_iBlindMode, 1);
+		g_esBlindCache[tank].g_iBlindRangeCooldown = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindRangeCooldown, g_esBlindPlayer[tank].g_iBlindRangeCooldown, g_esBlindSpecial[iType].g_iBlindRangeCooldown, g_esBlindAbility[iType].g_iBlindRangeCooldown, 1);
+		g_esBlindCache[tank].g_iBlindSight = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindSight, g_esBlindPlayer[tank].g_iBlindSight, g_esBlindSpecial[iType].g_iBlindSight, g_esBlindAbility[iType].g_iBlindSight, 1);
+		g_esBlindCache[tank].g_iBlindStagger = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iBlindStagger, g_esBlindPlayer[tank].g_iBlindStagger, g_esBlindSpecial[iType].g_iBlindStagger, g_esBlindAbility[iType].g_iBlindStagger, 1);
+		g_esBlindCache[tank].g_flCloseAreasOnly = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flCloseAreasOnly, g_esBlindPlayer[tank].g_flCloseAreasOnly, g_esBlindSpecial[iType].g_flCloseAreasOnly, g_esBlindAbility[iType].g_flCloseAreasOnly, 1);
+		g_esBlindCache[tank].g_iComboAbility = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iComboAbility, g_esBlindPlayer[tank].g_iComboAbility, g_esBlindSpecial[iType].g_iComboAbility, g_esBlindAbility[iType].g_iComboAbility, 1);
+		g_esBlindCache[tank].g_iHumanAbility = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iHumanAbility, g_esBlindPlayer[tank].g_iHumanAbility, g_esBlindSpecial[iType].g_iHumanAbility, g_esBlindAbility[iType].g_iHumanAbility, 1);
+		g_esBlindCache[tank].g_iHumanAmmo = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iHumanAmmo, g_esBlindPlayer[tank].g_iHumanAmmo, g_esBlindSpecial[iType].g_iHumanAmmo, g_esBlindAbility[iType].g_iHumanAmmo, 1);
+		g_esBlindCache[tank].g_iHumanCooldown = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iHumanCooldown, g_esBlindPlayer[tank].g_iHumanCooldown, g_esBlindSpecial[iType].g_iHumanCooldown, g_esBlindAbility[iType].g_iHumanCooldown, 1);
+		g_esBlindCache[tank].g_iHumanRangeCooldown = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iHumanRangeCooldown, g_esBlindPlayer[tank].g_iHumanRangeCooldown, g_esBlindSpecial[iType].g_iHumanRangeCooldown, g_esBlindAbility[iType].g_iHumanRangeCooldown, 1);
+		g_esBlindCache[tank].g_flOpenAreasOnly = flGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_flOpenAreasOnly, g_esBlindPlayer[tank].g_flOpenAreasOnly, g_esBlindSpecial[iType].g_flOpenAreasOnly, g_esBlindAbility[iType].g_flOpenAreasOnly, 1);
+		g_esBlindCache[tank].g_iRequiresHumans = iGetSubSettingValue(apply, bHuman, g_esBlindTeammate[tank].g_iRequiresHumans, g_esBlindPlayer[tank].g_iRequiresHumans, g_esBlindSpecial[iType].g_iRequiresHumans, g_esBlindAbility[iType].g_iRequiresHumans, 1);
+	}
+	else
+	{
+		g_esBlindCache[tank].g_flBlindChance = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindChance, g_esBlindAbility[iType].g_flBlindChance, 1);
+		g_esBlindCache[tank].g_flBlindDuration = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindDuration, g_esBlindAbility[iType].g_flBlindDuration, 1);
+		g_esBlindCache[tank].g_flBlindRange = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindRange, g_esBlindAbility[iType].g_flBlindRange, 1);
+		g_esBlindCache[tank].g_flBlindRangeChance = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flBlindRangeChance, g_esBlindAbility[iType].g_flBlindRangeChance, 1);
+		g_esBlindCache[tank].g_iBlindAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindAbility, g_esBlindAbility[iType].g_iBlindAbility, 1);
+		g_esBlindCache[tank].g_iBlindCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindCooldown, g_esBlindAbility[iType].g_iBlindCooldown, 1);
+		g_esBlindCache[tank].g_iBlindEffect = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindEffect, g_esBlindAbility[iType].g_iBlindEffect, 1);
+		g_esBlindCache[tank].g_iBlindHit = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindHit, g_esBlindAbility[iType].g_iBlindHit, 1);
+		g_esBlindCache[tank].g_iBlindHitMode = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindHitMode, g_esBlindAbility[iType].g_iBlindHitMode, 1);
+		g_esBlindCache[tank].g_iBlindIntensity = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindIntensity, g_esBlindAbility[iType].g_iBlindIntensity, 1);
+		g_esBlindCache[tank].g_iBlindMessage = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindMessage, g_esBlindAbility[iType].g_iBlindMessage, 1);
+		g_esBlindCache[tank].g_iBlindMode = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindMode, g_esBlindAbility[iType].g_iBlindMode, 1);
+		g_esBlindCache[tank].g_iBlindRangeCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindRangeCooldown, g_esBlindAbility[iType].g_iBlindRangeCooldown, 1);
+		g_esBlindCache[tank].g_iBlindSight = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindSight, g_esBlindAbility[iType].g_iBlindSight, 1);
+		g_esBlindCache[tank].g_iBlindStagger = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iBlindStagger, g_esBlindAbility[iType].g_iBlindStagger, 1);
+		g_esBlindCache[tank].g_flCloseAreasOnly = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flCloseAreasOnly, g_esBlindAbility[iType].g_flCloseAreasOnly, 1);
+		g_esBlindCache[tank].g_iComboAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iComboAbility, g_esBlindAbility[iType].g_iComboAbility, 1);
+		g_esBlindCache[tank].g_iHumanAbility = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanAbility, g_esBlindAbility[iType].g_iHumanAbility, 1);
+		g_esBlindCache[tank].g_iHumanAmmo = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanAmmo, g_esBlindAbility[iType].g_iHumanAmmo, 1);
+		g_esBlindCache[tank].g_iHumanCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanCooldown, g_esBlindAbility[iType].g_iHumanCooldown, 1);
+		g_esBlindCache[tank].g_iHumanRangeCooldown = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iHumanRangeCooldown, g_esBlindAbility[iType].g_iHumanRangeCooldown, 1);
+		g_esBlindCache[tank].g_flOpenAreasOnly = flGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_flOpenAreasOnly, g_esBlindAbility[iType].g_flOpenAreasOnly, 1);
+		g_esBlindCache[tank].g_iRequiresHumans = iGetSettingValue(apply, bHuman, g_esBlindPlayer[tank].g_iRequiresHumans, g_esBlindAbility[iType].g_iRequiresHumans, 1);
+	}
 }
 
 #if defined MT_ABILITIES_MAIN
@@ -726,7 +934,7 @@ public void MT_OnPluginEnd()
 {
 	for (int iTank = 1; iTank <= MaxClients; iTank++)
 	{
-		if (bIsTank(iTank, MT_CHECK_INGAME|MT_CHECK_ALIVE))
+		if (bIsInfected(iTank, MT_CHECK_INGAME|MT_CHECK_ALIVE))
 		{
 			vRemoveBlind(iTank);
 		}
@@ -743,17 +951,21 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 	{
 		int iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId),
 			iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId);
-		if (bIsValidClient(iBot) && bIsTank(iTank))
+		if (bIsValidClient(iBot) && bIsInfected(iTank))
 		{
 			vBlindCopyStats2(iBot, iTank);
 			vRemoveBlind(iBot);
 		}
 	}
+	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
+	{
+		vBlindReset();
+	}
 	else if (StrEqual(name, "player_bot_replace"))
 	{
 		int iTankId = event.GetInt("player"), iTank = GetClientOfUserId(iTankId),
 			iBotId = event.GetInt("bot"), iBot = GetClientOfUserId(iBotId);
-		if (bIsValidClient(iTank) && bIsTank(iBot))
+		if (bIsValidClient(iTank) && bIsInfected(iBot))
 		{
 			vBlindCopyStats2(iTank, iBot);
 			vRemoveBlind(iTank);
@@ -771,9 +983,15 @@ public void MT_OnEventFired(Event event, const char[] name, bool dontBroadcast)
 			vBlind(iPlayer, 0);
 		}
 	}
-	else if (StrEqual(name, "mission_lost") || StrEqual(name, "round_start") || StrEqual(name, "round_end"))
+	else if (StrEqual(name, "player_now_it"))
 	{
-		vBlindReset();
+		bool bExploded = event.GetBool("exploded");
+		int iSurvivorId = event.GetInt("userid"), iSurvivor = GetClientOfUserId(iSurvivorId),
+			iBoomerId = event.GetInt("attacker"), iBoomer = GetClientOfUserId(iBoomerId);
+		if (bIsBoomer(iBoomer) && bIsSurvivor(iSurvivor) && !bExploded)
+		{
+			vBlindHit(iSurvivor, iBoomer, GetRandomFloat(0.1, 100.0), g_esBlindCache[iBoomer].g_flBlindChance, g_esBlindCache[iBoomer].g_iBlindHit, MT_MESSAGE_RANGE, MT_ATTACK_RANGE);
+		}
 	}
 }
 
@@ -783,12 +1001,12 @@ void vBlindAbilityActivated(int tank)
 public void MT_OnAbilityActivated(int tank)
 #endif
 {
-	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)) || g_esBlindCache[tank].g_iHumanAbility == 0))
+	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_FAKECLIENT) && ((!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)) || g_esBlindCache[tank].g_iHumanAbility == 0))
 	{
 		return;
 	}
 
-	if (MT_IsTankSupported(tank) && (!bIsTank(tank, MT_CHECK_FAKECLIENT) || g_esBlindCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esBlindCache[tank].g_iBlindAbility == 1 && g_esBlindCache[tank].g_iComboAbility == 0)
+	if (MT_IsTankSupported(tank) && (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || g_esBlindCache[tank].g_iHumanAbility != 1) && MT_IsCustomTankSupported(tank) && g_esBlindCache[tank].g_iBlindAbility == 1 && g_esBlindCache[tank].g_iComboAbility == 0)
 	{
 		vBlindAbility(tank, GetRandomFloat(0.1, 100.0));
 	}
@@ -802,7 +1020,7 @@ public void MT_OnButtonPressed(int tank, int button)
 {
 	if (MT_IsTankSupported(tank, MT_CHECK_INDEX|MT_CHECK_INGAME|MT_CHECK_ALIVE|MT_CHECK_FAKECLIENT) && MT_IsCustomTankSupported(tank))
 	{
-		if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)))
+		if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType, tank) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)))
 		{
 			return;
 		}
@@ -811,7 +1029,7 @@ public void MT_OnButtonPressed(int tank, int button)
 		{
 			int iTime = GetTime();
 
-			switch (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown < iTime)
+			switch (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown <= iTime)
 			{
 				case true: vBlindAbility(tank, GetRandomFloat(0.1, 100.0));
 				case false: MT_PrintToChat(tank, "%s %t", MT_TAG3, "BlindHuman3", (g_esBlindPlayer[tank].g_iRangeCooldown - iTime));
@@ -883,12 +1101,12 @@ void vBlind2(int survivor, int red = 255, int green = 255, int blue = 255, int a
 
 void vBlindAbility(int tank, float random, int pos = -1)
 {
-	if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)))
+	if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType, tank) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)))
 	{
 		return;
 	}
 
-	if (!bIsTank(tank, MT_CHECK_FAKECLIENT) || (g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0))
+	if (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || (g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0))
 	{
 		g_esBlindPlayer[tank].g_bFailed = false;
 		g_esBlindPlayer[tank].g_bNoAmmo = false;
@@ -900,10 +1118,10 @@ void vBlindAbility(int tank, float random, int pos = -1)
 		int iSurvivorCount = 0;
 		for (int iSurvivor = 1; iSurvivor <= MaxClients; iSurvivor++)
 		{
-			if (bIsSurvivor(iSurvivor, MT_CHECK_INGAME|MT_CHECK_ALIVE) && !MT_IsAdminImmune(iSurvivor, tank) && !bIsAdminImmune(iSurvivor, g_esBlindPlayer[tank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iImmunityFlags, g_esBlindPlayer[iSurvivor].g_iImmunityFlags))
+			if (bIsSurvivor(iSurvivor, MT_CHECK_INGAME|MT_CHECK_ALIVE) && !MT_IsAdminImmune(iSurvivor, tank) && !bIsAdminImmune(iSurvivor, g_esBlindPlayer[tank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iImmunityFlags, g_esBlindPlayer[iSurvivor].g_iImmunityFlags))
 			{
 				GetClientAbsOrigin(iSurvivor, flSurvivorPos);
-				if (GetVectorDistance(flTankPos, flSurvivorPos) <= flRange)
+				if (GetVectorDistance(flTankPos, flSurvivorPos) <= flRange && bIsVisibleToPlayer(tank, iSurvivor, g_esBlindCache[tank].g_iBlindSight, .range = flRange))
 				{
 					vBlindHit(iSurvivor, tank, random, flChance, g_esBlindCache[tank].g_iBlindAbility, MT_MESSAGE_RANGE, MT_ATTACK_RANGE, pos);
 
@@ -914,13 +1132,13 @@ void vBlindAbility(int tank, float random, int pos = -1)
 
 		if (iSurvivorCount == 0)
 		{
-			if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
+			if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
 			{
 				MT_PrintToChat(tank, "%s %t", MT_TAG3, "BlindHuman4");
 			}
 		}
 	}
-	else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
+	else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
 	{
 		MT_PrintToChat(tank, "%s %t", MT_TAG3, "BlindAmmo");
 	}
@@ -928,30 +1146,35 @@ void vBlindAbility(int tank, float random, int pos = -1)
 
 void vBlindHit(int survivor, int tank, float random, float chance, int enabled, int messages, int flags, int pos = -1)
 {
-	if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)) || MT_IsAdminImmune(survivor, tank) || bIsAdminImmune(survivor, g_esBlindPlayer[tank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankType].g_iImmunityFlags, g_esBlindPlayer[survivor].g_iImmunityFlags))
+	if (bIsAreaNarrow(tank, g_esBlindCache[tank].g_flOpenAreasOnly) || bIsAreaWide(tank, g_esBlindCache[tank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[tank].g_iTankType, tank) || (g_esBlindCache[tank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[tank].g_iRequiresHumans) || (!MT_HasAdminAccess(tank) && !bHasAdminAccess(tank, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[tank].g_iAccessFlags)) || MT_IsAdminImmune(survivor, tank) || bIsAdminImmune(survivor, g_esBlindPlayer[tank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[tank].g_iTankTypeRecorded].g_iImmunityFlags, g_esBlindPlayer[survivor].g_iImmunityFlags))
 	{
 		return;
 	}
 
 	int iTime = GetTime();
-	if (((flags & MT_ATTACK_RANGE) && g_esBlindPlayer[tank].g_iRangeCooldown != -1 && g_esBlindPlayer[tank].g_iRangeCooldown > iTime) || (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && g_esBlindPlayer[tank].g_iCooldown != -1 && g_esBlindPlayer[tank].g_iCooldown > iTime))
+	if (((flags & MT_ATTACK_RANGE) && g_esBlindPlayer[tank].g_iRangeCooldown != -1 && g_esBlindPlayer[tank].g_iRangeCooldown >= iTime) || (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && g_esBlindPlayer[tank].g_iCooldown != -1 && g_esBlindPlayer[tank].g_iCooldown >= iTime))
 	{
 		return;
 	}
 
 	if (enabled == 1 && bIsSurvivor(survivor))
 	{
-		if (!bIsTank(tank, MT_CHECK_FAKECLIENT) || (flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE) || (g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0))
+		if (!bIsInfected(tank, MT_CHECK_FAKECLIENT) || (flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE) || (g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0))
 		{
 			if (random <= chance && !g_esBlindPlayer[survivor].g_bAffected)
 			{
+				if ((messages & MT_MESSAGE_MELEE) && !bIsVisibleToPlayer(tank, survivor, g_esBlindCache[tank].g_iBlindSight, .range = 100.0))
+				{
+					return;
+				}
+
 				g_esBlindPlayer[survivor].g_bAffected = true;
 				g_esBlindPlayer[survivor].g_iOwner = tank;
 
 				int iCooldown = -1;
-				if ((flags & MT_ATTACK_RANGE) && (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown < iTime))
+				if ((flags & MT_ATTACK_RANGE) && (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown <= iTime))
 				{
-					if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
+					if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1)
 					{
 						g_esBlindPlayer[tank].g_iAmmoCount++;
 
@@ -959,19 +1182,19 @@ void vBlindHit(int survivor, int tank, float random, float chance, int enabled, 
 					}
 
 					iCooldown = (pos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 11, pos)) : g_esBlindCache[tank].g_iBlindRangeCooldown;
-					iCooldown = (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0) ? g_esBlindCache[tank].g_iHumanRangeCooldown : iCooldown;
+					iCooldown = (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && g_esBlindPlayer[tank].g_iAmmoCount < g_esBlindCache[tank].g_iHumanAmmo && g_esBlindCache[tank].g_iHumanAmmo > 0) ? g_esBlindCache[tank].g_iHumanRangeCooldown : iCooldown;
 					g_esBlindPlayer[tank].g_iRangeCooldown = (iTime + iCooldown);
-					if (g_esBlindPlayer[tank].g_iRangeCooldown != -1 && g_esBlindPlayer[tank].g_iRangeCooldown > iTime)
+					if (g_esBlindPlayer[tank].g_iRangeCooldown != -1 && g_esBlindPlayer[tank].g_iRangeCooldown >= iTime)
 					{
 						MT_PrintToChat(tank, "%s %t", MT_TAG3, "BlindHuman5", (g_esBlindPlayer[tank].g_iRangeCooldown - iTime));
 					}
 				}
-				else if (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && (g_esBlindPlayer[tank].g_iCooldown == -1 || g_esBlindPlayer[tank].g_iCooldown < iTime))
+				else if (((flags & MT_ATTACK_CLAW) || (flags & MT_ATTACK_MELEE)) && (g_esBlindPlayer[tank].g_iCooldown == -1 || g_esBlindPlayer[tank].g_iCooldown <= iTime))
 				{
 					iCooldown = (pos != -1) ? RoundToNearest(MT_GetCombinationSetting(tank, 2, pos)) : g_esBlindCache[tank].g_iBlindCooldown;
-					iCooldown = (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1) ? g_esBlindCache[tank].g_iHumanCooldown : iCooldown;
+					iCooldown = (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1) ? g_esBlindCache[tank].g_iHumanCooldown : iCooldown;
 					g_esBlindPlayer[tank].g_iCooldown = (iTime + iCooldown);
-					if (g_esBlindPlayer[tank].g_iCooldown != -1 && g_esBlindPlayer[tank].g_iCooldown > iTime)
+					if (g_esBlindPlayer[tank].g_iCooldown != -1 && g_esBlindPlayer[tank].g_iCooldown >= iTime)
 					{
 						MT_PrintToChat(tank, "%s %t", MT_TAG3, "BlindHuman5", (g_esBlindPlayer[tank].g_iCooldown - iTime));
 					}
@@ -980,7 +1203,7 @@ void vBlindHit(int survivor, int tank, float random, float chance, int enabled, 
 				if (g_esBlindCache[tank].g_iBlindMode == 1)
 				{
 					g_esBlindPlayer[survivor].g_bAffected = false;
-					g_esBlindPlayer[survivor].g_iOwner = 0;
+					g_esBlindPlayer[survivor].g_iOwner = -1;
 
 					vBlind2(survivor, .alpha = 240);
 					vShakePlayerScreen(survivor);
@@ -1018,11 +1241,16 @@ void vBlindHit(int survivor, int tank, float random, float chance, int enabled, 
 					dpBlind.WriteCell(enabled);
 
 					float flDuration = (pos != -1) ? MT_GetCombinationSetting(tank, 5, pos) : g_esBlindCache[tank].g_flBlindDuration;
-					DataPack dpStopBlind;
-					CreateDataTimer((flDuration + 1.0), tTimerStopBlind, dpStopBlind, TIMER_FLAG_NO_MAPCHANGE);
-					dpStopBlind.WriteCell(iSurvivorId);
-					dpStopBlind.WriteCell(iTankId);
-					dpStopBlind.WriteCell(messages);
+					if (flDuration > 0.0)
+					{
+						DataPack dpStopBlind;
+						CreateDataTimer(0.1, tTimerStopBlind, dpStopBlind, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+						dpStopBlind.WriteCell(iSurvivorId);
+						dpStopBlind.WriteCell(iTankId);
+						dpStopBlind.WriteFloat(GetGameTime());
+						dpStopBlind.WriteFloat(flDuration + 1.0);
+						dpStopBlind.WriteCell(messages);
+					}
 
 					vScreenEffect(survivor, tank, g_esBlindCache[tank].g_iBlindEffect, flags);
 
@@ -1035,15 +1263,15 @@ void vBlindHit(int survivor, int tank, float random, float chance, int enabled, 
 
 				if (g_esBlindCache[tank].g_iBlindMessage & messages)
 				{
-					char sTankName[33];
+					char sTankName[64];
 					MT_GetTankName(tank, sTankName);
 					MT_PrintToChatAll("%s %t", MT_TAG2, "Blind", sTankName, survivor);
 					MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Blind", LANG_SERVER, sTankName, survivor);
 				}
 			}
-			else if ((flags & MT_ATTACK_RANGE) && (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown < iTime))
+			else if ((flags & MT_ATTACK_RANGE) && (g_esBlindPlayer[tank].g_iRangeCooldown == -1 || g_esBlindPlayer[tank].g_iRangeCooldown <= iTime))
 			{
-				if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && !g_esBlindPlayer[tank].g_bFailed)
+				if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && !g_esBlindPlayer[tank].g_bFailed)
 				{
 					g_esBlindPlayer[tank].g_bFailed = true;
 
@@ -1051,7 +1279,7 @@ void vBlindHit(int survivor, int tank, float random, float chance, int enabled, 
 				}
 			}
 		}
-		else if (bIsTank(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && !g_esBlindPlayer[tank].g_bNoAmmo)
+		else if (bIsInfected(tank, MT_CHECK_FAKECLIENT) && g_esBlindCache[tank].g_iHumanAbility == 1 && !g_esBlindPlayer[tank].g_bNoAmmo)
 		{
 			g_esBlindPlayer[tank].g_bNoAmmo = true;
 
@@ -1076,7 +1304,7 @@ void vRemoveBlind(int tank)
 			vBlind(iSurvivor, 0);
 
 			g_esBlindPlayer[iSurvivor].g_bAffected = false;
-			g_esBlindPlayer[iSurvivor].g_iOwner = 0;
+			g_esBlindPlayer[iSurvivor].g_iOwner = -1;
 		}
 	}
 
@@ -1091,7 +1319,7 @@ void vBlindReset()
 		{
 			vBlindReset2(iPlayer);
 
-			g_esBlindPlayer[iPlayer].g_iOwner = 0;
+			g_esBlindPlayer[iPlayer].g_iOwner = -1;
 		}
 	}
 }
@@ -1114,7 +1342,7 @@ void tTimerBlind(Handle timer, DataPack pack)
 	if (!MT_IsCorePluginEnabled() || !bIsHumanSurvivor(iSurvivor) || !g_esBlindPlayer[iSurvivor].g_bAffected)
 	{
 		g_esBlindPlayer[iSurvivor].g_bAffected = false;
-		g_esBlindPlayer[iSurvivor].g_iOwner = 0;
+		g_esBlindPlayer[iSurvivor].g_iOwner = -1;
 
 		return;
 	}
@@ -1122,10 +1350,10 @@ void tTimerBlind(Handle timer, DataPack pack)
 	int iTank = GetClientOfUserId(pack.ReadCell()),
 		iType = pack.ReadCell(),
 		iBlindEnabled = pack.ReadCell();
-	if (!MT_IsTankSupported(iTank) || bIsAreaNarrow(iTank, g_esBlindCache[iTank].g_flOpenAreasOnly) || bIsAreaWide(iTank, g_esBlindCache[iTank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[iTank].g_iTankType) || (g_esBlindCache[iTank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[iTank].g_iRequiresHumans) || !MT_HasAdminAccess(iTank) || !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || iType != g_esBlindPlayer[iTank].g_iTankType || MT_IsAdminImmune(iSurvivor, iTank) || bIsAdminImmune(iSurvivor, g_esBlindPlayer[iTank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankType].g_iImmunityFlags, g_esBlindPlayer[iSurvivor].g_iImmunityFlags) || iBlindEnabled == 0)
+	if (!MT_IsTankSupported(iTank) || bIsAreaNarrow(iTank, g_esBlindCache[iTank].g_flOpenAreasOnly) || bIsAreaWide(iTank, g_esBlindCache[iTank].g_flCloseAreasOnly) || MT_DoesTypeRequireHumans(g_esBlindPlayer[iTank].g_iTankType, iTank) || (g_esBlindCache[iTank].g_iRequiresHumans > 0 && iGetHumanCount() < g_esBlindCache[iTank].g_iRequiresHumans) || !MT_HasAdminAccess(iTank) || !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || iType != g_esBlindPlayer[iTank].g_iTankType || MT_IsAdminImmune(iSurvivor, iTank) || bIsAdminImmune(iSurvivor, g_esBlindPlayer[iTank].g_iTankType, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankTypeRecorded].g_iImmunityFlags, g_esBlindPlayer[iSurvivor].g_iImmunityFlags) || iBlindEnabled == 0)
 	{
 		g_esBlindPlayer[iSurvivor].g_bAffected = false;
-		g_esBlindPlayer[iSurvivor].g_iOwner = 0;
+		g_esBlindPlayer[iSurvivor].g_iOwner = -1;
 
 		vBlind(iSurvivor, 0);
 
@@ -1140,7 +1368,7 @@ void tTimerBlindCombo(Handle timer, DataPack pack)
 	pack.Reset();
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || g_esBlindCache[iTank].g_iBlindAbility == 0)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || g_esBlindCache[iTank].g_iBlindAbility == 0)
 	{
 		return;
 	}
@@ -1161,7 +1389,7 @@ void tTimerBlindCombo2(Handle timer, DataPack pack)
 	}
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
-	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankType].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType) || !MT_IsCustomTankSupported(iTank) || g_esBlindCache[iTank].g_iBlindHit == 0)
+	if (!MT_IsCorePluginEnabled() || !MT_IsTankSupported(iTank) || (!MT_HasAdminAccess(iTank) && !bHasAdminAccess(iTank, g_esBlindAbility[g_esBlindPlayer[iTank].g_iTankTypeRecorded].g_iAccessFlags, g_esBlindPlayer[iTank].g_iAccessFlags)) || !MT_IsTypeEnabled(g_esBlindPlayer[iTank].g_iTankType, iTank) || !MT_IsCustomTankSupported(iTank) || g_esBlindCache[iTank].g_iBlindHit == 0)
 	{
 		return;
 	}
@@ -1170,7 +1398,7 @@ void tTimerBlindCombo2(Handle timer, DataPack pack)
 	int iPos = pack.ReadCell();
 	char sClassname[32];
 	pack.ReadString(sClassname, sizeof sClassname);
-	if ((g_esBlindCache[iTank].g_iBlindHitMode == 0 || g_esBlindCache[iTank].g_iBlindHitMode == 1) && (StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock")))
+	if ((g_esBlindCache[iTank].g_iBlindHitMode == 0 || g_esBlindCache[iTank].g_iBlindHitMode == 1) && (bIsSpecialInfected(iTank) || StrEqual(sClassname[7], "tank_claw") || StrEqual(sClassname, "tank_rock")))
 	{
 		vBlindHit(iSurvivor, iTank, flRandom, flChance, g_esBlindCache[iTank].g_iBlindHit, MT_MESSAGE_MELEE, MT_ATTACK_CLAW, iPos);
 	}
@@ -1180,7 +1408,7 @@ void tTimerBlindCombo2(Handle timer, DataPack pack)
 	}
 }
 
-void tTimerStopBlind(Handle timer, DataPack pack)
+Action tTimerStopBlind(Handle timer, DataPack pack)
 {
 	pack.Reset();
 
@@ -1188,31 +1416,45 @@ void tTimerStopBlind(Handle timer, DataPack pack)
 	if (!bIsHumanSurvivor(iSurvivor))
 	{
 		g_esBlindPlayer[iSurvivor].g_bAffected = false;
-		g_esBlindPlayer[iSurvivor].g_iOwner = 0;
+		g_esBlindPlayer[iSurvivor].g_iOwner = -1;
 
-		return;
+		return Plugin_Stop;
 	}
 
 	int iTank = GetClientOfUserId(pack.ReadCell());
 	if (!MT_IsTankSupported(iTank) || !MT_IsCustomTankSupported(iTank) || !g_esBlindPlayer[iSurvivor].g_bAffected)
 	{
 		g_esBlindPlayer[iSurvivor].g_bAffected = false;
-		g_esBlindPlayer[iSurvivor].g_iOwner = 0;
+		g_esBlindPlayer[iSurvivor].g_iOwner = -1;
 
 		vBlind(iSurvivor, 0);
 
-		return;
+		return Plugin_Stop;
 	}
 
-	g_esBlindPlayer[iSurvivor].g_bAffected = false;
-	g_esBlindPlayer[iSurvivor].g_iOwner = 0;
-
-	vBlind(iSurvivor, 0);
-
+	float flCurrentTime = pack.ReadFloat(), flDuration = pack.ReadFloat();
 	int iMessage = pack.ReadCell();
-	if (g_esBlindCache[iTank].g_iBlindMessage & iMessage)
+	if ((flCurrentTime + flDuration) < GetGameTime())
 	{
-		MT_PrintToChatAll("%s %t", MT_TAG2, "Blind2", iSurvivor);
-		MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Blind2", LANG_SERVER, iSurvivor);
+		g_esBlindPlayer[iSurvivor].g_bAffected = false;
+		g_esBlindPlayer[iSurvivor].g_iOwner = -1;
+
+		vBlind(iSurvivor, 0);
+
+		if (g_esBlindCache[iTank].g_iBlindMessage & iMessage)
+		{
+			MT_PrintToChatAll("%s %t", MT_TAG2, "Blind2", iSurvivor);
+			MT_LogMessage(MT_LOG_ABILITY, "%s %T", MT_TAG, "Blind2", LANG_SERVER, iSurvivor);
+		}
+
+		return Plugin_Stop;
 	}
+
+	switch (bIsVisibleToPlayer(iTank, iSurvivor, g_esBlindCache[iTank].g_iBlindSight))
+	{
+		case true: vBlind(iSurvivor, g_esBlindCache[iTank].g_iBlindIntensity);
+		case false: vBlind(iSurvivor, 0);
+	}
+
+	return Plugin_Continue;
 }
