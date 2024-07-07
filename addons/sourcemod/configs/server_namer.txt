@@ -181,12 +181,12 @@
 	}
 	"brutaldifficulty"
 	{
-		"name"			"Brutal Difficulty"
+		"name"			"Campaign Brutal"
 		"difficulty"	"0"
 	}
 	"realismbrutaldifficulty"
 	{
-		"name"			"Realism Brutal Difficulty"
+		"name"			"Realism Brutal"
 		"difficulty"	"0"
 	}
 	"realismhardeight"
@@ -202,6 +202,16 @@
 	"lasso"
 	{
 		"name"			"Lasso"
+		"difficulty"	"1"
+	}
+	"hardtwentyeight"
+	{
+		"name"			"Hard 28"
+		"difficulty"	"1"
+	}
+	"realismhardtwentyeight"
+	{
+		"name"			"Realism Hard 28"
 		"difficulty"	"1"
 	}
 }
