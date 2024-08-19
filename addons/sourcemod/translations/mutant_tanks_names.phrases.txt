@@ -11137,4 +11137,164 @@
 	{
 		"en"			"{mint}Funny Fat Cat Server."
 	}
+
+	"Tank #139 Name"
+	{
+		"en"			"Mammoth Tank"
+	}
+
+	"Boomer #139 Name"
+	{
+		"en"			"Mammoth Boomer"
+	}
+
+	"Charger #139 Name"
+	{
+		"en"			"Mammoth Charger"
+	}
+
+	"Hunter #139 Name"
+	{
+		"en"			"Mammoth Hunter"
+	}
+
+	"Jockey #139 Name"
+	{
+		"en"			"Mammoth Jockey"
+	}
+
+	"Smoker #139 Name"
+	{
+		"en"			"Mammoth Smoker"
+	}
+
+	"Spitter #139 Name"
+	{
+		"en"			"Mammoth Spitter"
+	}
+
+	"Witch #139 Name"
+	{
+		"en"			"Mammoth Witch"
+	}
+
+	"Tank #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Boomer #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Charger #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Hunter #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Jockey #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Smoker #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Spitter #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Witch #139"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Tank #140 Name"
+	{
+		"en"			"Mammoth Mk. II Tank"
+	}
+
+	"Boomer #140 Name"
+	{
+		"en"			"Mammoth Mk. II Boomer"
+	}
+
+	"Charger #140 Name"
+	{
+		"en"			"Mammoth Mk. II Charger"
+	}
+
+	"Hunter #140 Name"
+	{
+		"en"			"Mammoth Mk. II Hunter"
+	}
+
+	"Jockey #140 Name"
+	{
+		"en"			"Mammoth Mk. II Jockey"
+	}
+
+	"Smoker #140 Name"
+	{
+		"en"			"Mammoth Mk. II Smoker"
+	}
+
+	"Spitter #140 Name"
+	{
+		"en"			"Mammoth Mk. II Spitter"
+	}
+
+	"Witch #140 Name"
+	{
+		"en"			"Mammoth Mk. II Witch"
+	}
+
+	"Tank #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Boomer #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Charger #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Hunter #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Jockey #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Smoker #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Spitter #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
+
+	"Witch #140"
+	{
+		"en"			"{mint}Funny Fat Cat Server."
+	}
 }
