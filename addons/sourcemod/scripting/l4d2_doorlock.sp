@@ -11,7 +11,7 @@
 
 #define CVAR_FLAGS				FCVAR_NOTIFY
 #define SOUND_COUNTDOWN			"buttons/blip1.wav"
-#define SOUND_MOVEOUT			"ui/survival_teamrec.wav"
+#define SOUND_MOVEOUT			"buttons/bell1.wav"
 #define SOUND_BREAK1			"physics/metal/metal_box_break1.wav"
 #define SOUND_BREAK2			"physics/metal/metal_box_break2.wav"
 
@@ -72,9 +72,9 @@ public void OnPluginStart() {
 	g_cModesOff =		CreateConVar("l4d2_dlock_modes_off",	"",		"Turn off the plugin in these game modes, separate by commas (no spaces). (Empty = none).", CVAR_FLAGS);
 	g_cModesTog =		CreateConVar("l4d2_dlock_modes_tog",	"0",	"Turn on the plugin in these game modes. 0=All, 1=Coop, 2=Survival, 4=Versus, 8=Scavenge. Add numbers together.", CVAR_FLAGS);
 	g_cBreakTheDoor =	CreateConVar("l4d2_dlock_weakdoor",		"1",	"Saferoom door will be breaked, once opened.", CVAR_FLAGS);
-	g_cPrepareTime1r =	CreateConVar("l4d2_dlock_prepare1st",	"7",	"How many seconds plugin will wait after all clients have loaded before starting first round on a map", CVAR_FLAGS);
-	g_cPrepareTime2r =	CreateConVar("l4d2_dlock_prepare2nd",	"7",	"How many seconds plugin will wait after all clients have loaded before starting second round on a map", CVAR_FLAGS);
-	g_cClientTimeOut =	CreateConVar("l4d2_dlock_timeout",		"45",	"How many seconds plugin will wait after a map starts before giving up on waiting for a client", CVAR_FLAGS);
+	g_cPrepareTime1r =	CreateConVar("l4d2_dlock_prepare1st",	"5",	"How many seconds plugin will wait after all clients have loaded before starting first round on a map", CVAR_FLAGS);
+	g_cPrepareTime2r =	CreateConVar("l4d2_dlock_prepare2nd",	"5",	"How many seconds plugin will wait after all clients have loaded before starting second round on a map", CVAR_FLAGS);
+	g_cClientTimeOut =	CreateConVar("l4d2_dlock_timeout",		"40",	"How many seconds plugin will wait after a map starts before giving up on waiting for a client", CVAR_FLAGS);
 	g_cDisplayMode =	CreateConVar("l4d2_dlock_displaymode",	"1",	"Set the display mode for the countdown. (0-off,1-hint, 2-center, 3-chat. any other value to hide countdown)", CVAR_FLAGS);
 	g_cDisplayPanel =	CreateConVar("l4d2_dlock_displaypanel",	"2",	"Display players state panel. 0-disabled, 1-hide failed, 2-full info", CVAR_FLAGS);
 	g_cFreezeNodoor =	CreateConVar("l4d2_dlock_freezenodoor",	"0",	"Freeze survivors if start saferoom door is absent", CVAR_FLAGS);

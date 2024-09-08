@@ -76,6 +76,10 @@
 	{
 		"en" "Tanks Playground"
 	}
+	"TankChallenge"
+	{
+		"en" "Tanks Challenge"
+	}
 	"WhiteForest"
 	{
 		"en" "White Forest"
@@ -723,5 +727,57 @@
 	"theparishstormmode"
 	{
 		"en" "The Parish Storm"
+	}
+	"bigwat"
+	{
+		"en" "Big Wat"
+	}
+	"CedaFever"
+	{
+		"en" "Ceda Fever"
+	}
+	"Highway17L4D2"
+	{
+		"en" "Half-Life 2: Highway 17"
+	}
+	"Lockdown"
+	{
+		"en" "Lockdown DLC"
+	}
+	"LockdownChapterTwo"
+	{
+		"en" "Lockdown: Chapter Two"
+	}
+	"Chernobyl"
+	{
+		"en" "Chernobyl: Chapter One"
+	}
+	"4sidedcoin"
+	{
+		"en" "4 Sided Coin"
+	}
+	"MissionImprobable"
+	{
+		"en" "Mission Improbable"
+	}
+	"neonprime"
+	{
+		"en" "Neon Prime 2069"
+	}
+	"Overkill"
+	{
+		"en" "Overkill"
+	}
+	"FIRESTARTER"
+	{
+		"en" "Fire Starter"
+	}
+	"DeadVacationL4D2"
+	{
+		"en" "Dead Vacation (Original)"
+	}
+	"DeadVacationL4D2Alt"
+	{
+		"en" "Dead Vacation (Alt Finale)"
 	}
 }
