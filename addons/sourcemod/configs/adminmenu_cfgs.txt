@@ -6,4 +6,6 @@ Configs
 {
 	"cfg/ffc_config/closeacs.cfg"			"Disable ACS"
 	"cfg/ffc_config/unlimit.cfg"			"Vocalize Unlimited"
+	"cfg/ffc_config/mute.cfg"			"Vocalize Mute"
+	"cfg/sourcemod/plugin.vocalizeantiflood.cfg"			"Vocalize Standard"
 }
