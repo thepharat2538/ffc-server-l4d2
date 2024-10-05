@@ -780,4 +780,36 @@
 	{
 		"en" "Dead Vacation (Alt Finale)"
 	}
+	"DeadGetway"
+	{
+		"en" "Dead Getaway"
+	}
+	"LastBreath"
+	{
+		"en" "Last Breath"
+	}
+	"sc"
+	{
+		"en" "Rescue Dawn"
+	}
+	"UrbanHell"
+	{
+		"en" "Urbanian Hell"
+	}
+	"WelcometoHell"
+	{
+		"en" "Welcome to Hell"
+	}
+	"yomimario2"
+	{
+		"en" "Left 4 Mario"
+	}
+	"riptide"
+	{
+		"en" "Riptide"
+	}
+	"snowden"
+	{
+		"en" "Snow Den"
+	}
 }
