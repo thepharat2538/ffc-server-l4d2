@@ -35,75 +35,51 @@
 
 "Advertisements"
 {
-    "1"
+	"1"
     {
-        "chat"			"{olive}[WELCOME] {lightgreen}ยินดีต้อนรับสู่เซิร์ฟเวอร์ Funny Fat Cat"
+        "chat"			"{olive}Welcome to Server {blue} Funny Fat Cat ヾ(≧▽≦*)o"
     }
 	"2"
-    {
-        "chat"			"{olive}[TIP] !js{lightgreen}: เข้าร่วมเกม, {olive}!afk{lightgreen}: เพื่อนิ่งเฉย, {olive}!ob{lightgreen}: เข้าโหมดผู้ชม"       
+    { 
+        "chat"			"{olive}Join Steam Group: {blue}https://steamcommunity.com/groups/funnyfatcat"
     }
 	"3"
     {
-		"chat"			"{olive}[TIP] !mapvote{lightgreen}: โหวตแคมเปญถัดไป, {olive}!votemode{lightgreen}: โหวตโหมดเกม"
+        "chat"			"{olive}Join Discord Group: {blue}https://discord.gg/2zwfwvWqf4"
     }
 	"4"
     {
-		"chat"			"{olive}[TIP] {lightgreen}สามารถเปลี่ยนตัวละครได้ด้วยการพิมพ์ {olive}!csm"
+        "chat"			"{olive}Notice: {red}This server does not allow any Cheating, R-18 Spray, N-word, Griefing"
     }
 	"5"
     {
-		"chat"			"{olive}[TIP] {lightgreen}สามารถเต้นได้ด้วยการพิมพ์ {olive}!dance {lightgreen}หรือ {olive}!emotes"
+        "chat"			"{olive}Download Custom Campaigns: {blue}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
     }
 	"6"
     {
-        "chat"			"{olive}[NOTE] {lightgreen}เข้าร่วมกลุ่ม Discord {olive}https://discord.gg/2zwfwvWqf4"
+        "chat"			"{olive}Server Time: {blue}Date: {date}, Time: {time}"
     }
 	"7"
     {
-		"chat"			"{olive}[NOTE] {lightgreen}หากคุณชอบเซิร์ฟเวอร์นี้ พิมพ์{olive} !motd{lightgreen} เพื่อเข้าร่วมกลุ่ม Steam"
+        "chat"			"{olive}ยินดีต้อนรับสู่เซิร์ฟเวอร์ {blue}Funny Fat Cat ヾ(≧▽≦*)o"
     }
 	"8"
-    {
-        "chat"			"{olive}[NOTE] {lightgreen}ดาวน์โหลดแคมเปญเสริมได้ที่ {olive}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
+    { 
+        "chat"			"{olive}เข้าร่วมกลุ่ม Steam {blue}https://steamcommunity.com/groups/funnyfatcat"
     }
 	"9"
     {
-        "chat"			"{olive}[TIME] {lightgreen}เวลาเซิร์ฟเวอร์ = วันที่: {date}, เวลา: {time}"
+        "chat"			"{olive}เข้าร่วมกลุ่ม Discord {blue}https://discord.gg/2zwfwvWqf4"
     }
-    "10"
+	"10"
     {
-        "chat"			"{olive}[WELCOME] {lightgreen}Welcome to Server Funny Fat Cat"
+        "chat"			"{olive}ประกาศ: {red}เซิร์ฟเวอร์นี้ไม่อนุญาตให้ทำการ โกง, สเปรย์ R-18, คำเหยียด, ก่อกวน/เกรียน"
     }
 	"11"
-    { 
-		"chat"			"{olive}[TIP] !js{lightgreen}: Join the game, {olive}!afk{lightgreen}: Become to idle, {olive}!ob{lightgreen}: Join Spectator"
+    {
+        "chat"			"{olive}ดาวน์โหลดแคมเปญเสริมได้ที่ {blue}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
     }
 	"12"
     {
-        "chat"			"{olive}[TIP] !mapvote{lightgreen}: Vote for the next campaign, {olive}!votemode{lightgreen}: Vote gamemode"
-    }
-	"13"
-    {
-        "chat"			"{olive}[TIP] {lightgreen}You can change characters by typing{olive} !csm"
-    }
-	"14"
-    {
-        "chat"			"{olive}[TIP] {lightgreen}You can dance by typing. {olive}!dance {lightgreen}or {olive}!emotes"
-    }
-	"15"
-    {
-        "chat"			"{olive}[NOTE] {lightgreen}Join Discord Group {olive}https://discord.gg/2zwfwvWqf4"
-    }
-	"16"
-    {
-		"chat"			"{olive}[NOTE] {lightgreen}If you like this server Type {olive}!motd{lightgreen} to Join Steam Group"
-    }
-	"17"
-    {
-		"chat"			"{olive}[NOTE] {lightgreen}Download Custom Campaigns {olive}https://steamcommunity.com/sharedfiles/filedetails/?id=2983763324"
-    }
-	"18"
-    {
-        "chat"			"{olive}[TIME] {lightgreen}Server Time = Date: {date}, Time: {time}"
+        "chat"			"{olive}เวลาเซิร์ฟเวอร์: {blue}วันที่: {date}, เวลา: {time}"
     }
