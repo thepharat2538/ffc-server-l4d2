@@ -78,6 +78,10 @@ DirectorOptions <-
 
 }
 
+if ( Director.GetGameMode() == "hardtwentyeight" || Director.GetGameMode() == "realismhardtwentyeight" )
+{
+    DirectorOptions.A_CustomFinaleValue7 = 1;
+}
 
 if ( "DirectorOptions" in LocalScript && "ProhibitBosses" in LocalScript.DirectorOptions )
 {

@@ -50,8 +50,7 @@ SharedOptions <-
 	A_CustomFinaleValue13 = "c1m4_delay"
 	
 	A_CustomFinale14 = TANK
-	A_CustomFinaleValue14 = 2 
-	A_CustomFinaleMusic14 = "Event.TankMidpoint_Metal"  
+	A_CustomFinaleValue14 = 1 
 	
  	A_CustomFinale15 = ONSLAUGHT
 	A_CustomFinaleValue15 = "c1m4_delay"
@@ -75,7 +74,7 @@ SharedOptions <-
 	A_CustomFinaleValue21 = "c1m4_delay"
 	
 	A_CustomFinale22 = TANK
-	A_CustomFinaleValue22 = 3
+	A_CustomFinaleValue22 = 2
 	A_CustomFinaleMusic22 = "Event.TankMidpoint_Metal"  
 	
  	A_CustomFinale23 = ONSLAUGHT
@@ -106,7 +105,7 @@ SharedOptions <-
 	A_CustomFinaleValue31 = "c1m4_delay"
 
 	A_CustomFinale32 = TANK
-	A_CustomFinaleValue32 = 4
+	A_CustomFinaleValue32 = 2
 	A_CustomFinaleMusic32 = "Event.TankMidpoint_Metal" 
 
  	A_CustomFinale33 = ONSLAUGHT
@@ -137,8 +136,8 @@ SharedOptions <-
 	A_CustomFinaleValue41 = "c1m4_delay" 
 
 	A_CustomFinale42 = TANK
-	A_CustomFinaleValue42 = 4 
-        A_CustomFinaleMusic42 = "Event.TankMidpoint_Metal" 
+	A_CustomFinaleValue42 = 2 
+    A_CustomFinaleMusic42 = "Event.TankMidpoint_Metal" 
                   
  	A_CustomFinale43 = ONSLAUGHT
 	A_CustomFinaleValue43 = "c1m4_delay"    

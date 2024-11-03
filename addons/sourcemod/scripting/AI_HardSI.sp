@@ -3,6 +3,25 @@
 #include <sourcemod>
 #include <sdktools>
 #include <left4dhooks>
+#include <actions>
+
+bool bLate;
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	EngineVersion test = GetEngineVersion();
+
+	if( test != Engine_Left4Dead2 )
+	{
+		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
+		return APLRes_SilentFailure;
+	}
+
+	bLate = late;
+	return APLRes_Success;
+}
+
+bool 
+	g_bPluginEnd;
 
 #include "AI_HardSI/AI_Smoker.sp"
 #include "AI_HardSI/AI_Boomer.sp"
@@ -55,14 +74,10 @@
 #define FAR_AWAY 5
 #define ABOVE 6
 
-ConVar 
-	g_hCvarEnable, g_hCvarAssaultReminderInterval;
-
-bool 
-	g_bCvarEnable;
-
-float 
-	g_fCvarAssaultReminderInterval;
+ConVar g_hCvarEnable, g_hCvarAssaultReminderInterval, g_hCvarExecAggressiveCfg;
+bool g_bCvarEnable;
+float g_fCvarAssaultReminderInterval;
+char g_sCvarExecAggressiveCfg[64];
 
 int 
 	g_iCurTarget[MAXPLAYERS + 1];
@@ -72,7 +87,7 @@ public Plugin myinfo =
 	name = "AI: Hard SI",
 	author = "Breezy & HarryPotter",
 	description = "Improves the AI behaviour of special infected",
-	version = "1.8-2024/4/5",
+	version = "2.0-2024/9/9",
 	url = "github.com/breezyplease"
 };
 
@@ -80,15 +95,18 @@ public void OnPluginStart()
 { 
 	// Cvars
 	g_hCvarEnable 				 	= CreateConVar( "AI_HardSI_enable",        		"1",   	"0=Plugin off, 1=Plugin on.", CVAR_FLAGS, true, 0.0, true, 1.0);
-	g_hCvarAssaultReminderInterval 	= CreateConVar( "ai_assault_reminder_interval", "2", 	"Frequency(sec) at which the 'nb_assault' command is fired to make SI attack" );
+	g_hCvarAssaultReminderInterval 	= CreateConVar( "ai_assault_reminder_interval", "2", 	"Frequency(sec) at which the 'nb_assault' command is fired to make SI attack", CVAR_FLAGS, true, 0.0 );
+	g_hCvarExecAggressiveCfg 		= CreateConVar( "AI_HardSI_aggressive_cfg", 	"aggressive_ai.cfg", 	"File to execute for AI aggressive cvars (in cfg/AI_HardSI folder)\nExecute file every map changed", CVAR_FLAGS );
 
 	GetCvars();
 	g_hCvarEnable.AddChangeHook(ConVarChanged_Cvars);
 	g_hCvarAssaultReminderInterval.AddChangeHook(ConVarChanged_Cvars);
-	
+	g_hCvarExecAggressiveCfg.AddChangeHook(ConVarChanged_Cvars);
+
 	// Event hooks
 	HookEvent("player_spawn", player_spawn);
 	HookEvent("ability_use", ability_use); 
+
 	// Load modules
 	Smoker_OnModuleStart();
 	Hunter_OnModuleStart();
@@ -97,11 +115,27 @@ public void OnPluginStart()
 	Charger_OnModuleStart();
 	Jockey_OnModuleStart();
 	Tank_OnModuleStart();
+
 	//Autoconfig for plugin
 	AutoExecConfig(true, "AI_HardSI");
+
+	if(bLate)
+	{
+		LateLoad();
+	}
 }
 
-public void OnPluginEnd() {
+void LateLoad()
+{
+	if(L4D_HasAnySurvivorLeftSafeArea())
+	{
+		CreateTimer( g_fCvarAssaultReminderInterval, Timer_ForceInfectedAssault, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE );
+	}
+}
+
+public void OnPluginEnd() 
+{
+	g_bPluginEnd = true;
 	// Unload modules
 	Smoker_OnModuleEnd();
 	Hunter_OnModuleEnd();
@@ -121,6 +155,19 @@ void GetCvars()
 {
 	g_bCvarEnable = g_hCvarEnable.BoolValue;
 	g_fCvarAssaultReminderInterval = g_hCvarAssaultReminderInterval.FloatValue;
+	g_hCvarExecAggressiveCfg.GetString(g_sCvarExecAggressiveCfg, sizeof(g_sCvarExecAggressiveCfg));
+}
+
+//Sourcemod API Forward-------------------------------
+
+public void OnConfigsExecuted()
+{
+	GetCvars();
+
+	if(g_bCvarEnable)
+	{
+		ServerCommand("exec AI_HardSI/%s", g_sCvarExecAggressiveCfg);
+	}
 }
 
 /***********************************************************************************************************************************************************************************
@@ -129,18 +176,44 @@ void GetCvars()
 																	
 ***********************************************************************************************************************************************************************************/
 
-public Action L4D_OnFirstSurvivorLeftSafeArea(int client) {
+public void L4D_OnFirstSurvivorLeftSafeArea_Post(int client) 
+{
 	CreateTimer( g_fCvarAssaultReminderInterval, Timer_ForceInfectedAssault, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE );
-
-	return Plugin_Continue;
 }
 
-public Action Timer_ForceInfectedAssault( Handle timer ) {
+Action Timer_ForceInfectedAssault( Handle timer ) 
+{
 	if(!g_bCvarEnable) return Plugin_Continue;
 
 	CheatServerCommand("nb_assault");
 
 	return Plugin_Continue;
+}
+
+// Actions API--------------
+
+public void OnActionCreated(BehaviorAction action, int actor, const char[] name)
+{
+	if(!g_bCvarEnable) return;
+
+	switch (name[0])
+	{
+		case 'S':
+		{ 
+			if (strncmp(name, "Smoker", 6) == 0)
+			{
+				AI_Smoker_OnActionCreated(action, actor, name);
+			}
+		}
+		case 'H':
+		{ 
+			if (strncmp(name, "Hunter", 6) == 0)
+			{
+				AI_Hunter_OnActionCreated(action, actor, name);
+			}
+		}
+	}
+
 }
 
 /***********************************************************************************************************************************************************************************
@@ -248,12 +321,12 @@ void ability_use(Event event, char[] name, bool dontBroadcast) {
 }
 
 // Left 4 Dhooks API----------
+
 public Action L4D2_OnChooseVictim(int specialInfected, int &curTarget) {
 	g_iCurTarget[specialInfected] = curTarget;
 	return Plugin_Continue;
 }
 
-// Left 4 DHooks API-----------
 public Action L4D2_OnSelectTankAttack(int client, int &sequence) {
 	if(!g_bCvarEnable) return Plugin_Continue;
 

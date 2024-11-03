@@ -812,4 +812,20 @@
 	{
 		"en" "Snow Den"
 	}
+	"coast"
+	{
+		"en" "Tropical Thunder"
+	}
+	"happy"
+	{
+		"en" "The Happyfice"
+	}
+	"northchaos"
+	{
+		"en" "North Chaos"
+	}
+	"sunny"
+	{
+		"en" "Sunny EZ"
+	}
 }

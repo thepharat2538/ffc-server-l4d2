@@ -60,6 +60,11 @@ DirectorOptions <-
 	MusicDynamicMobScanStopSize = 1
 }
 
+if ( Director.GetGameMode() == "hardtwentyeight" || Director.GetGameMode() == "realismhardtwentyeight" )
+{
+    DirectorOptions.A_CustomFinaleValue7 = 1;
+}
+
 function EnableEscapeTanks()
 {
 	printl( "Chase Tanks Enabled!" );

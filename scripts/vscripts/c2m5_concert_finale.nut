@@ -51,6 +51,11 @@ SharedOptions <-
 	SpecialRespawnInterval = 20
 } 
 
+if ( Director.GetGameMode() == "hardtwentyeight" || Director.GetGameMode() == "realismhardtwentyeight" )
+{
+    DirectorOptions.A_CustomFinaleValue8 = 1;
+}
+
 InitialPanicOptions <-
 {
 	ShouldConstrainLargeVolumeSpawn = true

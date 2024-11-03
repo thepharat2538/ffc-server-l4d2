@@ -2,10 +2,6 @@
 #pragma newdecls required //強制1.7以後的新語法
 #define SMOKER_TONGUE_DELAY 0.1
 
-ConVar hCvarTongueDelay;
-ConVar hCvarSmokerHealth;
-ConVar hCvarChokeDamageInterrupt;
-
 static ConVar g_hCvarEnable; 
 static bool g_bCvarEnable;
 
@@ -16,30 +12,17 @@ void Smoker_OnModuleStart() {
     GetCvars();
     g_hCvarEnable.AddChangeHook(ConVarChanged_EnableCvars);
 
-	// Smoker health
-    hCvarSmokerHealth = FindConVar("z_gas_health");
-    
-    // Damage required to kill a smoker that is pulling someone
-    hCvarChokeDamageInterrupt = FindConVar("tongue_break_from_damage_amount"); 
-
-    // Delay before smoker shoots its tongue
-    hCvarTongueDelay = FindConVar("smoker_tongue_delay"); 
-
     if(g_bCvarEnable) _OnModuleStart();
-    hCvarSmokerHealth.AddChangeHook(OnSmokerHealthChanged); 
-    hCvarChokeDamageInterrupt.AddChangeHook(OnTongueCvarChange);    
-    hCvarTongueDelay.AddChangeHook(OnTongueCvarChange);
 }
 
 static void _OnModuleStart()
 {
-    hCvarChokeDamageInterrupt.SetInt(hCvarSmokerHealth.IntValue); // default 50
-    hCvarTongueDelay.SetFloat(SMOKER_TONGUE_DELAY); // default 1.5
+    if(g_bPluginEnd) return;
 }
 
-void Smoker_OnModuleEnd() {
-	hCvarChokeDamageInterrupt.RestoreDefault();
-	hCvarTongueDelay.RestoreDefault();
+void Smoker_OnModuleEnd() 
+{
+
 }
 
 static void ConVarChanged_EnableCvars(ConVar hCvar, const char[] sOldVal, const char[] sNewVal)
@@ -60,13 +43,24 @@ static void GetCvars()
     g_bCvarEnable = g_hCvarEnable.BoolValue;
 }
 
-// Game tries to reset these cvars
-static void OnTongueCvarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
+// Actions API--------------
 
-    if(g_bCvarEnable) _OnModuleStart();
+stock void AI_Smoker_OnActionCreated(BehaviorAction action, int actor, const char[] name)
+{
+    //if (!strcmp(name[6], "Behavior"))
+    //{
+    //	action.InitialContainedAction = SmokerBehavior_InitialContainedAction;
+    //	action.InitialContainedActionPost = SmokerBehavior_InitialContainedAction_Post;
+    //}
+    if (strcmp(name[6], "Attack") == 0)
+    {
+        action.OnCommandAssault = SmokerAttack_OnCommandAssault;
+    }
 }
 
-// Update choke damage interrupt to match smoker max health
-static void OnSmokerHealthChanged(ConVar convar, const char[] oldValue, const char[] newValue) {
-    if(g_bCvarEnable) _OnModuleStart();
+static Action SmokerAttack_OnCommandAssault(any action, int actor, ActionDesiredResult result)
+{
+	// 保護smoker不受到nb_assault影響產生bug
+	// 當Smoker的舌頭斷掉之後，站在原地不動不撤退 (nb_assault的bug)
+	return Plugin_Handled;
 }
