@@ -1,0 +1,8 @@
+"Phrases"
+{
+	"Vocalize_Notify"
+	{
+		"en"		"Stop flooding Vocalize Spams"
+		"th"		"หยุดฟลัด บทพูดตัวละคร"
+	}
+}	
