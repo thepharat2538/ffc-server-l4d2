@@ -69,22 +69,6 @@ DirectorOptions <-
 	MusicDynamicMobScanStopSize = 1
 }
 
-if ( Director.GetGameMode() == "hardtwentyeight" || Director.GetGameMode() == "realismhardtwentyeight" )
-{
-	DirectorOptions.A_CustomFinale_StageCount = 8;
-    DirectorOptions.A_CustomFinaleValue8 = PreEscapeDelay;
-	DirectorOptions.rawdelete("A_CustomFinale9");
-	DirectorOptions.rawdelete("A_CustomFinaleValue9");
-	DirectorOptions.rawdelete("A_CustomFinaleMusic9");
-	DirectorOptions.rawdelete("A_CustomFinale10");
-	DirectorOptions.rawdelete("A_CustomFinaleValue10");
-	DirectorOptions.rawdelete("A_CustomFinale11");
-	DirectorOptions.rawdelete("A_CustomFinaleValue11");
-	DirectorOptions.rawdelete("A_CustomFinaleMusic11");
-	DirectorOptions.rawdelete("A_CustomFinale12");
-	DirectorOptions.rawdelete("A_CustomFinaleValue12");
-}
-
 function EnableEscapeTanks()
 {
 	printl( "Chase Tanks Enabled!" );

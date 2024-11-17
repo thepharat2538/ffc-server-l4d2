@@ -78,9 +78,28 @@ DirectorOptions <-
 
 }
 
-if ( Director.GetGameMode() == "hardtwentyeight" || Director.GetGameMode() == "realismhardtwentyeight" )
+local difficulty = Convars.GetStr( "z_difficulty" ).tolower();
+if ( difficulty == "easy" )
 {
-    DirectorOptions.A_CustomFinaleValue7 = 1;
+	printl("Easy Finale");
+	printl("==========================");
+	DirectorOptions.A_CustomFinaleValue7 <- 1;
+}
+else if ( difficulty == "normal" )
+{
+	printl("Normal Finale");
+	printl("==========================");
+	DirectorOptions.A_CustomFinaleValue7 <- 1;
+}
+else if ( difficulty == "hard" )
+{
+	printl("Advanced Finale");
+	printl("==========================");
+}
+else if ( difficulty == "impossible" )
+{
+	printl("Expert Finale");
+	printl("==========================");
 }
 
 if ( "DirectorOptions" in LocalScript && "ProhibitBosses" in LocalScript.DirectorOptions )

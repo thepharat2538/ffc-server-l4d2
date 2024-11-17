@@ -2,7 +2,7 @@
 {
 	"Vocalize_Notify"
 	{
-		"en"		"Stop flooding Vocalize Spams"
+		"en"		"Stop flooding Vocalize"
 		"th"		"หยุดฟลัด บทพูดตัวละคร"
 	}
 }	

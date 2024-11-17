@@ -828,4 +828,20 @@
 	{
 		"en" "Sunny EZ"
 	}
+	"ProjectAuburn"
+	{
+		"en" "Project Auburn"
+	}
+	"re3short"
+	{
+		"en" "Resident Evil 3 - Short"
+	}
+	"TheEvilWithin"
+	{
+		"en" "The Evil Within"
+	}
+	"TheEvilWithin2"
+	{
+		"en" "The Evil Within 2"
+	}
 }

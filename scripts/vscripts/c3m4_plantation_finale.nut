@@ -46,3 +46,26 @@ SpecialRespawnInterval = 55
 	//-----------------------------------------------------
 }
 
+local difficulty = Convars.GetStr( "z_difficulty" ).tolower();
+if ( difficulty == "easy" )
+{
+	printl("Easy Finale");
+	printl("==========================");
+}
+else if ( difficulty == "normal" )
+{
+	printl("Normal Finale");
+	printl("==========================");
+}
+else if ( difficulty == "hard" )
+{
+	printl("Advanced Finale");
+	printl("==========================");
+	DirectorOptions.A_CustomFinaleValue3 <- 2;
+}
+else if ( difficulty == "impossible" )
+{
+	printl("Expert Finale");
+	printl("==========================");
+	DirectorOptions.A_CustomFinaleValue3 <- 2;
+}
